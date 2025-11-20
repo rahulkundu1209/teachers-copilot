@@ -35,7 +35,7 @@ export default function DashboardPage() {
         <div className="flex items-start gap-6">
           <div>
             <h1 className="serif-head text-4xl font-bold">Welcome back, {user.name || "hello"}!</h1>
-            <p className="mt-4 text-lg text-gray-700">Ready to plan an engaging lesson? Let’s get started.</p>
+            <p className="mt-4 text-lg text-gray-700">Ready to plan an engaging lesson? Let's get started.</p>
           </div>
         </div>
 
