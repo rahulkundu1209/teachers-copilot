@@ -1,0 +1,148 @@
+/* styles/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Palette chosen to match your Figma F2 mock */
+:root {
+  --tc-bg: #ffffff;
+  --tc-sidebar-bg: #f2f2f2;
+  --tc-sidebar-item: #e9e6e2;
+  --tc-sidebar-active: #8e8576;   /* beige for small accents */
+  --tc-accent: #6e5f50;           /* brownish used earlier */
+  /* NEW: F2-specific colors (blue/grey palette) */
+  --tc-input-bg: #cfd8dc;         /* light bluish grey for pill inputs */
+  --tc-input-placeholder: #9aa6b0;/* placeholder shade */
+  --tc-syllabus-bg: #9aa6b0;      /* darker blue-grey for syllabus box (visible) */
+  --tc-syllabus-contrast: #f1f4f6; /* light area inside upload tile */
+  --tc-generate: #2f6deb;         /* blue button (kept perceptually strong) */
+  --tc-upload-tile: #e6edf1;      /* upload tile background */
+  --tc-text-muted: #6b6b6b;
+}
+
+/* base */
+html, body, #__next {
+  height: 100%;
+  background: var(--tc-bg);
+  color: #111827;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial;
+}
+
+/* serif headline style for large headings */
+.serif-head {
+  font-family: Georgia, "Times New Roman", Times, serif;
+  color: #0b1220;
+}
+
+/* mild card helper */
+.tc-card {
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+}
+
+/* Input pill style used by F2 */
+.input-pill {
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--tc-input-bg);
+  color: #0b1220;
+}
+
+/* Placeholder style for pill inputs */
+::placeholder {
+  color: var(--tc-input-placeholder);
+  opacity: 1;
+}
+
+/* Syllabus textarea style */
+.syllabus-box {
+  background: var(--tc-syllabus-bg);
+  color: rgba(255,255,255,0.95);
+  border-radius: 10px;
+  padding: 18px;
+}
+
+/* Upload tile */
+.upload-tile {
+  background: var(--tc-upload-tile);
+  border-radius: 10px;
+  padding: 18px;
+  text-align: center;
+}
+
+/* Generate button */
+.btn-generate {
+  background: var(--tc-generate);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+/* small tooltip helper used by sidebar if needed */
+.sidebar-tooltip {
+  position: absolute;
+  left: 70px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.85);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  z-index: 40;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .create-square { width: 140px; height: 140px; }
+}
+
+/* --- Force input background color on focus / autofill --- */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea {
+  background-color: #909DAE !important;
+  color: #0b1220 !important;
+}
+
+/* Keep same background on focus (remove outline/ring) */
+input:focus,
+textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  background-color: #909DAE !important;
+}
+
+/* Prevent Chrome autofill yellow/blue */
+input:-webkit-autofill,
+textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #909DAE inset !important;
+  -webkit-text-fill-color: #0b1220 !important;
+}
+
+/* Some browsers add appearance on focus; clear it */
+input:-internal-autofill-selected {
+  background-color: #909DAE !important;
+  color: #0b1220 !important;
+}
+
+/* targets inputs and textareas project-wide */
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255,255,255,1) !important;
+  opacity: 1 !important;
+}
+
+/* for older browsers */
+:-ms-input-placeholder { color: rgba(255,255,255,1) !important; }
+::-ms-input-placeholder { color: rgba(255,255,255,1) !important; }
+
+/* ensure focus doesn't change bg (browser defaults) */
+input:focus, textarea:focus {
+  outline: none;
+  box-shadow: none;
+}

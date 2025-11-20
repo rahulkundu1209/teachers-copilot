@@ -1,0 +1,36 @@
+[
+  {
+    "name": "Generated Course (Sample)",
+    "branch": "CSE",
+    "numLectures": 12,
+    "topics": [
+      {
+        "id": "gen_t1",
+        "title": "Module 1: Basics & Notation",
+        "lectures": 2,
+        "content": "Lecture content: basics and notation. Explain definitions, notation, asymptotic analysis.",
+        "slides": "Slide 1: Intro; Slide 2: Notation; Slide 3: Examples",
+        "quiz": "Q1: Define Big O. Q2: Compare O(n) and O(log n).",
+        "assignments": "Assignment 1: Solve 5 basic problems."
+      },
+      {
+        "id": "gen_t2",
+        "title": "Module 2: Sorting Algorithms",
+        "lectures": 3,
+        "content": "Lecture content: Bubble, Selection, Insertion, Merge, Quick. Complexity and stability.",
+        "slides": "Slide 1: Sorts overview; Slide 2: Merge sort; Slide 3: Quick sort",
+        "quiz": "Q1: Complexity of Merge Sort?",
+        "assignments": "Assignment 2: Implement Merge Sort and Quick Sort."
+      },
+      {
+        "id": "gen_t3",
+        "title": "Module 3: Data Structures",
+        "lectures": 3,
+        "content": "Lecture content: Arrays, Linked List, Stack, Queue, Tree basics.",
+        "slides": "Slide 1: Arrays; Slide 2: Linked List; Slide 3: Trees",
+        "quiz": "Q1: Compare arrays vs linked lists.",
+        "assignments": "Assignment 3: Implement stack and queue in chosen language."
+      }
+    ]
+  }
+]
