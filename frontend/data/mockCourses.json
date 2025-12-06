@@ -1,0 +1,13 @@
+[
+  {
+    "id": "course_demo_1",
+    "name": "Introduction to Algorithms",
+    "branch": "CSE",
+    "numLectures": 12,
+    "createdAt": "2025-01-10T09:00:00.000Z",
+    "topics": [
+      { "id": "t_demo_1", "title": "Algorithm Analysis & Big O", "lectures": 2, "content": "Content placeholder for Algorithm Analysis." },
+      { "id": "t_demo_2", "title": "Sorting & Searching", "lectures": 3, "content": "Content placeholder for Sorting." }
+    ]
+  }
+]
