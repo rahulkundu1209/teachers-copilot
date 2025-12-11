@@ -173,6 +173,14 @@ export default function CreateProfile() {
     if (isEditMode) {
       router.replace("/settings");
     } else {
+      // After registration, completely clear history to prevent going back to create-profile
+      if (typeof window !== "undefined") {
+        // Clear all history entries by replacing current state
+        window.history.replaceState({}, document.title, "/dashboard");
+        // Add a new entry to prevent back navigation
+        window.history.pushState({}, document.title, "/dashboard");
+      }
+      // Use replace to prevent double entries
       router.replace("/dashboard");
     }
   }

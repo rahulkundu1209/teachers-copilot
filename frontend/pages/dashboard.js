@@ -45,10 +45,8 @@ export default function DashboardPage() {
 
     if (typeof window !== "undefined") {
       const handlePopState = (e) => {
-        // User pressed back button - stay on dashboard by preventing default navigation
-        e.preventDefault();
-        // Replace history entry instead of pushing, to avoid accumulating fake entries
-        window.history.replaceState(null, "", window.location.href);
+        // User pressed back button - stay on dashboard by re-pushing state
+        window.history.pushState(null, "", window.location.href);
       };
 
       window.addEventListener("popstate", handlePopState);
