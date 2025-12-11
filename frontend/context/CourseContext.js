@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";
 
 const CourseContext = createContext();
 
@@ -13,30 +14,49 @@ function generateId(prefix = "") {
 export function CourseProvider({ children }) {
   const [courses, setCourses] = useState([]);
   const [history, setHistory] = useState([]);
+  const { user, initialized } = useAuth();
+
+  async function loadCourses() {
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const token = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const [cRes, hRes] = await Promise.all([
+        fetch(`${API_BASE}/api/courses`, { headers }),
+        fetch(`${API_BASE}/api/history`, { headers }),
+      ]);
+
+      let cJson = [];
+      let hJson = [];
+      if (cRes && cRes.ok) cJson = await cRes.json();
+      if (hRes && hRes.ok) hJson = await hRes.json();
+      // Require backend responses. Do not fallback to localStorage here so
+      // pages (My Courses / History) reflect backend state during testing.
+      setCourses(Array.isArray(cJson) ? cJson : []);
+      setHistory(Array.isArray(hJson) ? hJson : []);
+    } catch (err) {
+      // If backend is unavailable, set empty lists and surface the error.
+      console.error("Error loading initial data (backend likely down)", err);
+      setCourses([]);
+      setHistory([]);
+    }
+  }
 
   useEffect(() => {
-    async function load() {
-      try {
-        const [cRes, hRes] = await Promise.all([
-          fetch("/api/courses"),
-          fetch("/api/history"),
-        ]);
-        const cJson = await cRes.json();
-        const hJson = await hRes.json();
-        const saved = localStorage.getItem("tc_courses");
-        if (saved) {
-          setCourses(JSON.parse(saved));
-        } else {
-          setCourses(Array.isArray(cJson) ? cJson : []);
-          localStorage.setItem("tc_courses", JSON.stringify(Array.isArray(cJson) ? cJson : []));
-        }
-        setHistory(Array.isArray(hJson) ? hJson : []);
-      } catch (err) {
-        console.error("Error loading initial data", err);
-      }
-    }
-    load();
+    loadCourses();
   }, []);
+
+  // Reload courses/history when auth user changes
+  useEffect(() => {
+    if (!initialized) return;
+    if (user) {
+      loadCourses();
+    } else {
+      setCourses([]);
+      setHistory([]);
+    }
+  }, [user, initialized]);
 
   useEffect(() => {
     localStorage.setItem("tc_courses", JSON.stringify(courses));
@@ -44,9 +64,28 @@ export function CourseProvider({ children }) {
 
   function addCourse(course) {
     const withId = { ...course, id: course.id || generateId("course_"), createdAt: new Date().toISOString() };
-    setCourses(prev => [withId, ...prev]);
-    setHistory(prev => [{ id: generateId("h_"), type: "created_course", data: { courseId: withId.id, name: withId.name }, time: new Date().toISOString() }, ...prev]);
-    return withId;
+    // Persist to backend only. If backend call fails, do not fallback to localStorage.
+    (async () => {
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
+        const headers = { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const res = await fetch(`${API_BASE}/api/courses`, { method: "POST", headers, body: JSON.stringify(withId) });
+        if (res && res.ok) {
+          const saved = await res.json();
+          setCourses(prev => [saved, ...prev]);
+          // record history to backend (best-effort)
+          try { await fetch(`${API_BASE}/api/history`, { method: "POST", headers, body: JSON.stringify({ type: "created_course", data: { courseId: saved.id, name: saved.name } }) }); } catch(e){}
+          return;
+        }
+        // If response is not ok, log and leave UI unchanged so tests reveal the backend error.
+        console.error("Failed to create course on backend", res && (await res.text()).slice(0,200));
+      } catch (err) {
+        console.error("Error creating course (backend likely down)", err);
+      }
+    })();
+
+    return withId; // return candidate but courses list will only be updated on successful backend response
   }
 
   function getCourseById(id) {
@@ -58,6 +97,8 @@ export function CourseProvider({ children }) {
     history,
     addCourse,
     getCourseById,
+    reloadCourses: loadCourses,
+    reloadHistory: loadCourses, // Same function loads both
   };
 
   return <CourseContext.Provider value={value}>{children}</CourseContext.Provider>;

@@ -20,6 +20,19 @@
   --tc-text-muted: #6b6b6b;
 }
 
+/* Dark mode palette */
+html.dark {
+  --tc-bg: #1a1a1a;
+  --tc-sidebar-bg: #2d2d2d;
+  --tc-sidebar-item: #3d3d3d;
+  --tc-sidebar-active: #6b5d50;
+  --tc-input-bg: #3d4d5c;
+  --tc-input-placeholder: #7a8a9a;
+  --tc-syllabus-bg: #4a5a6a;
+  --tc-syllabus-contrast: #2d3d4d;
+  --tc-text-muted: #a0a0a0;
+}
+
 /* base */
 html, body, #__next {
   height: 100%;
@@ -27,6 +40,11 @@ html, body, #__next {
   color: #111827;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, "Helvetica Neue", Arial;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html.dark {
+  color: #e5e5e5;
 }
 
 /* serif headline style for large headings */
@@ -35,10 +53,18 @@ html, body, #__next {
   color: #0b1220;
 }
 
+html.dark .serif-head {
+  color: #e0ddd8;
+}
+
 /* mild card helper */
 .tc-card {
   border-radius: 12px;
   box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+}
+
+html.dark .tc-card {
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05);
 }
 
 /* Input pill style used by F2 */
@@ -47,6 +73,10 @@ html, body, #__next {
   padding: 12px;
   background: var(--tc-input-bg);
   color: #0b1220;
+}
+
+html.dark .input-pill {
+  color: #e5e5e5;
 }
 
 /* Placeholder style for pill inputs */

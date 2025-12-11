@@ -4,11 +4,12 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 const AuthContext = createContext();
 
 // a small exported helper so modules that call logout() directly still work
-// (keeps compatibility with any file that does `import { logout } from "../context/AuthContext"`)
+// (keeps compatibility with any file that does `import { logout } from "../context/AuthContext"}`)
 export function logout() {
   try {
     if (typeof window !== "undefined") {
       localStorage.removeItem("tc_user");
+      localStorage.removeItem("tc_token");
     }
   } catch (e) {
     console.warn("logout: could not clear localStorage", e);
@@ -21,17 +22,59 @@ export function AuthProvider({ children }) {
 
   // read user from localStorage on mount (client-only)
   useEffect(() => {
-    try {
-      const raw = typeof window !== "undefined" ? localStorage.getItem("tc_user") : null;
-      if (raw) {
-        setUserState(JSON.parse(raw));
+    let cancelled = false;
+
+    async function bootstrap() {
+      try {
+        const rawUser = typeof window !== "undefined" ? localStorage.getItem("tc_user") : null;
+        const rawToken = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
+        if (rawUser) {
+          const parsed = JSON.parse(rawUser);
+          if (!cancelled) setUserState(parsed);
+        }
+
+        // Validate token & user existence with backend
+        if (rawToken) {
+          const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+          const res = await fetch(`${API_BASE}/api/user/profile`, {
+            headers: { Authorization: `Bearer ${rawToken}` },
+          });
+          if (!res.ok) {
+            // Token invalid or user missing -> clear auth
+            if (!cancelled) {
+              localStorage.removeItem("tc_user");
+              localStorage.removeItem("tc_token");
+              setUserState(null);
+            }
+          } else {
+            const data = await res.json().catch(() => null);
+            if (data?.user && !cancelled) {
+              setUserState((prev) => ({ ...(prev || {}), ...data.user }));
+              localStorage.setItem("tc_user", JSON.stringify({ ...(data.user || {}) }));
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("AuthContext: bootstrap failed", err);
+        if (!cancelled) {
+          localStorage.removeItem("tc_user");
+          localStorage.removeItem("tc_token");
+          setUserState(null);
+        }
+      } finally {
+        if (!cancelled) setInitialized(true);
       }
-    } catch (err) {
-      console.warn("AuthContext: could not read tc_user from localStorage", err);
-    } finally {
-      setInitialized(true);
     }
+
+    bootstrap();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  // Keep users logged in - no auto-logout on refresh/close
+  // Manual logout via Sign Out button clears tokens
+
 
   // centralised save -> updates state + localStorage
   const setUser = useCallback((u) => {
@@ -74,6 +117,7 @@ export function AuthProvider({ children }) {
     try {
       if (typeof window !== "undefined") {
         localStorage.removeItem("tc_user");
+        localStorage.removeItem("tc_token");
       }
     } catch (e) {
       console.warn("AuthContext: logout localStorage failed", e);

@@ -33,6 +33,31 @@ export default function Sidebar() {
     { key: "settings", href: "/settings", label: "Settings", icon: SettingsIcon },
   ];
 
+  // start as unavailable so navigation is blocked until we confirm backend health
+  const [backendAvailable, setBackendAvailable] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+    async function check() {
+      try {
+        const res = await fetch(`${API_BASE}/api/health`);
+        if (!mounted) return;
+        setBackendAvailable(!!(res && res.ok));
+      } catch (err) {
+        if (!mounted) return;
+        setBackendAvailable(false);
+      }
+    }
+
+    // initial check
+    check();
+    // poll every 5s
+    const id = setInterval(check, 5000);
+    return () => { mounted = false; clearInterval(id); };
+  }, []);
+
   function handleSignOut() {
     logout();
     if (typeof window !== "undefined") window.location.href = "/";
@@ -73,6 +98,12 @@ export default function Sidebar() {
                 <li key={it.key} className="flex justify-center relative">
                   <Link
                     href={it.href}
+                    onClick={(e) => {
+                      if (!backendAvailable && ["my-courses", "history", "settings"].includes(it.key)) {
+                        e.preventDefault();
+                        try { alert("Backend unavailable — start backend to access this page."); } catch (err) {}
+                      }
+                    }}
                     className={`flex items-center justify-center w-12 h-12 rounded-md transition ${active ? "bg-white shadow" : "bg-white/70 hover:bg-white"}`}
                     onMouseEnter={() => setHoveredItem(it.key)}
                     onMouseLeave={() => setHoveredItem(null)}
@@ -93,15 +124,23 @@ export default function Sidebar() {
             // expanded: big rounded rectangle pill with icon + label (beige style)
             return (
               <li key={it.key}>
-                <Link
-                  href={it.href}
-                  className={`flex items-center gap-3 p-3 rounded-lg tc-card transition ${active ? "bg-[#cfc3b4]" : "bg-[#e9e6e2]"}`}
-                >
-                  <span className="w-8 h-8 flex items-center justify-center">
-                    <Icon className="w-6 h-6" />
-                  </span>
-                  <span className="text-lg">{it.label}</span>
-                </Link>
+                    <Link
+                      href={it.href}
+                      onClick={(e) => {
+                        // block navigation to certain tabs while backend is down
+                        if (!backendAvailable && ["my-courses", "history", "settings"].includes(it.key)) {
+                          e.preventDefault();
+                          // small visible feedback
+                          try { alert("Backend unavailable — start backend to access this page."); } catch (err) {}
+                        }
+                      }}
+                      className={`flex items-center gap-3 p-3 rounded-lg tc-card transition ${active ? "bg-[#cfc3b4]" : "bg-[#e9e6e2]"}`}
+                    >
+                      <span className="w-8 h-8 flex items-center justify-center">
+                        <Icon className="w-6 h-6" />
+                      </span>
+                      <span className="text-lg">{it.label}</span>
+                    </Link>
               </li>
             );
           })}

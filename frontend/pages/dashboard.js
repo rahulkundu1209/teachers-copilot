@@ -3,18 +3,61 @@ import Layout from "../components/Layout";
 import Link from "next/link";
 import { useCourses } from "../context/CourseContext";
 import { useAuth } from "../context/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 export default function DashboardPage() {
   const { courses } = useCourses();
   const { user, initialized } = useAuth();
   const router = useRouter();
+  // start as unavailable so navigation is blocked until health check confirms
+  const [backendAvailable, setBackendAvailable] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+    async function check() {
+      try {
+        const res = await fetch(`${API_BASE}/api/health`);
+        if (!mounted) return;
+        setBackendAvailable(!!(res && res.ok));
+      } catch (err) {
+        if (!mounted) return;
+        setBackendAvailable(false);
+      }
+    }
+
+    check();
+    const id = setInterval(check, 5000);
+    return () => { mounted = false; clearInterval(id); };
+  }, []);
 
   // Keep existing guard but only run after initialization
   useEffect(() => {
     if (initialized && !user) router.push("/");
   }, [initialized, user]);
+
+  // Block back navigation on dashboard (only via physical back button)
+  useEffect(() => {
+    // Only add popstate listener if we're actually on the dashboard
+    if (router.pathname !== "/dashboard") return;
+
+    if (typeof window !== "undefined") {
+      const handlePopState = (e) => {
+        // User pressed back button - stay on dashboard by preventing default navigation
+        e.preventDefault();
+        // Replace history entry instead of pushing, to avoid accumulating fake entries
+        window.history.replaceState(null, "", window.location.href);
+      };
+
+      window.addEventListener("popstate", handlePopState);
+
+      return () => {
+        window.removeEventListener("popstate", handlePopState);
+      };
+    }
+  }, [router.pathname]);
 
   // wait until auth initialized to avoid redirect race
   if (!initialized) return null;
@@ -26,7 +69,13 @@ export default function DashboardPage() {
     e.preventDefault();
     if (!initialized) return; // avoid race
     if (!user) router.push("/");
-    else router.push("/create");
+    else {
+      if (!backendAvailable) {
+        try { alert("Backend unavailable — start backend to create a course."); } catch (err) {}
+        return;
+      }
+      router.push("/create");
+    }
   }
 
   return (

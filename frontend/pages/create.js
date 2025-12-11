@@ -5,14 +5,41 @@ import { useRouter } from "next/router";
 import { useAuth } from "../context/AuthContext";
 import { useCourses } from "../context/CourseContext";
 
+// This page requires the backend to be running. We poll the health endpoint
+// and redirect back to dashboard if the backend is unavailable.
+
 export default function CreateCoursePage() {
   const router = useRouter();
   const { user, initialized } = useAuth();
-  const { addCourse } = useCourses();
+  const { reloadCourses } = useCourses();
+  const [backendAvailable, setBackendAvailable] = useState(false);
+  const [checkingBackend, setCheckingBackend] = useState(true);
 
   useEffect(() => {
     if (initialized && !user) router.push("/");
   }, [initialized, user]);
+
+  useEffect(() => {
+    let mounted = true;
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+    async function check() {
+      try {
+        const res = await fetch(`${API_BASE}/api/health`);
+        if (!mounted) return;
+        setBackendAvailable(!!(res && res.ok));
+      } catch (err) {
+        if (!mounted) return;
+        setBackendAvailable(false);
+      } finally {
+        if (mounted) setCheckingBackend(false);
+      }
+    }
+
+    check();
+    const id = setInterval(check, 5000);
+    return () => { mounted = false; clearInterval(id); };
+  }, []);
 
   const [name, setName] = useState("");
   const [branch, setBranch] = useState("");
@@ -29,6 +56,13 @@ export default function CreateCoursePage() {
 
   async function handleGenerate(e) {
     e.preventDefault();
+    
+    if (loading) return; // Prevent duplicate submissions
+    
+    if (!backendAvailable) {
+      alert("Backend unavailable — start the backend to generate content.");
+      return;
+    }
     setLoading(true);
 
     const payload = {
@@ -37,42 +71,52 @@ export default function CreateCoursePage() {
       numLectures: Number(numLectures) || 10,
       syllabusText,
       additionalPrompt,
-      createdAt: new Date().toISOString(),
     };
 
     try {
-      const res = await fetch("/api/generate", {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const token = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
+      
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_BASE}/api/generate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(payload),
       });
+      
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData?.error || "Generation failed");
+      }
+      
       const json = await res.json();
+      const generated = json?.course;
 
-      const generated = json?.course || {
-        id: "course_" + Math.random().toString(36).slice(2, 8),
-        name: payload.name,
-        branch: payload.branch,
-        numLectures: payload.numLectures,
-        createdAt: payload.createdAt,
-        topics:
-          json?.topics?.length
-            ? json.topics
-            : createDummyTopics(payload.numLectures || 10),
-      };
-
-      addCourse(generated);
-      router.push(`/course/${generated.id}`);
+      if (generated) {
+        // Reload courses from backend to show the new one
+        await reloadCourses();
+        router.push("/my-courses");
+      } else {
+        throw new Error("No course returned from backend");
+      }
     } catch (err) {
       console.error(err);
-      alert("Generation failed.");
-    } finally {
-      setLoading(false);
+      alert(err.message || "Generation failed.");
+      setLoading(false); // Reset on error
     }
   }
 
   return (
     <Layout>
       <div className="py-6">
+
+        {!checkingBackend && !backendAvailable && (
+          <div className="mb-4 p-4 rounded bg-red-50 border border-red-200 text-red-800">
+            Backend unavailable. Start the backend to use the Create flow.
+          </div>
+        )}
 
         <h2 className="serif-head text-3xl font-bold mb-2">
           Plan Your Next Lesson? Let’s get started.

@@ -1,30 +1,100 @@
 // pages/index.js (Login)
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const router = useRouter();
+  const { user, initialized } = useAuth();
   const { setUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState("credentials"); // 'credentials' or 'otp'
+  const [otp, setOtp] = useState("");
+  const [error, setError] = useState("");
 
-  function handleLogin(e) {
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (initialized && user) {
+      router.replace("/dashboard");
+    }
+  }, [user, initialized, router]);
+  async function handleLogin(e) {
     if (e && e.preventDefault) e.preventDefault();
-
-    // temporary flexible login: accept any values
-    const mockUser = { name: "hello", email };
-    try {
-      if (typeof window !== "undefined") localStorage.setItem("tc_user", JSON.stringify(mockUser));
-    } catch (err) {
-      console.warn("Could not save mock user to localStorage", err);
+    if (loading) return;
+    
+    // Frontend validation
+    if (!email.trim()) {
+      setError("Email is required");
+      return;
+    }
+    if (!password) {
+      setError("Password is required");
+      return;
     }
 
-    // update context immediately so other pages don't redirect
-    if (typeof setUser === "function") setUser(mockUser);
+    setError("");
+    setLoading(true);
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/request-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error("You are not registered. Please register first.");
+        }
+        throw new Error(data?.error || "Could not request OTP");
+      }
+      // proceed to OTP step
+      setStep("otp");
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Could not request OTP");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-    router.push("/dashboard");
+  async function handleVerifyOtp(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (loading) return;
+    setError("");
+    setLoading(true);
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: otp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Invalid code");
+
+      const user = data.user;
+      const token = data.token;
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("tc_user", JSON.stringify(user));
+          localStorage.setItem("tc_token", token);
+        }
+      } catch (err) {
+        console.warn("Could not save auth to localStorage", err);
+      }
+      if (typeof setUser === "function") setUser(user);
+      router.push("/dashboard");
+      return;
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Verification failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -37,7 +107,8 @@ export default function Login() {
           Log In
         </h2>
 
-        <div className="space-y-6">
+        {step === "credentials" ? (
+          <form onSubmit={handleLogin} className="space-y-6">
           <input
             type="email"
             value={email}
@@ -66,16 +137,41 @@ export default function Login() {
             autoComplete="current-password"
           />
 
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleLogin}
-              className="bg-[#0077B6] hover:bg-[#00639b] text-white px-8 py-3 rounded-lg text-lg transition"
-            >
-              Log In
-            </button>
-          </div>
-        </div>
+            {error && <div className="text-red-600">{error}</div>}
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={loading}
+                className={`bg-[#0077B6] hover:bg-[#00639b] text-white px-8 py-3 rounded-lg text-lg transition ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
+              >
+                {loading ? 'Signing in...' : 'Log In'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp} className="space-y-6">
+            <p className="text-sm text-gray-700">An OTP was sent to <strong>{email}</strong>. Enter it below.</p>
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="Enter OTP"
+              className="w-full h-14 rounded-lg px-4 text-lg"
+              style={{ backgroundColor: "#909DAE", color: "#0B1220", border: "none" }}
+            />
+            {error && <div className="text-red-600">{error}</div>}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={loading}
+                className={`bg-[#0077B6] hover:bg-[#00639b] text-white px-8 py-3 rounded-lg text-lg transition ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
+              >
+                {loading ? 'Verifying...' : 'Verify OTP'}
+              </button>
+            </div>
+          </form>
+        )}
 
         <p className="text-center text-lg mt-8 text-[#0B1220]">
           New User?{" "}

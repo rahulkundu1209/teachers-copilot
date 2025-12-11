@@ -2,14 +2,17 @@
 import "../styles/globals.css";
 import { CourseProvider } from "../context/CourseContext";
 import { AuthProvider } from "../context/AuthContext";
+import { ThemeProvider } from "../context/ThemeContext";
 
 function MyApp({ Component, pageProps }) {
   return (
-    <AuthProvider>
-      <CourseProvider>
-        <Component {...pageProps} />
-      </CourseProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <CourseProvider>
+          <Component {...pageProps} />
+        </CourseProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
