@@ -1,4 +1,5 @@
 import Course from "../models/Course.js";
+import { analyzeSyllabus } from "./aiAgentService.js";
 
 export async function listCourses(email) {
   if (!email) return [];
@@ -19,17 +20,18 @@ export async function createCourse(email, course) {
   if (!email) throw new Error("Email required");
   const { name, branch, numLectures, syllabusText, additionalPrompt } = course;
   
-  if (!name || !branch || !numLectures) {
-    throw new Error("Course name, branch, and number of lectures are required");
+  if (!name || !branch || !numLectures || !syllabusText) {
+    throw new Error("Course name, branch, number of lectures and syllabus are required");
   }
   
   // Generate dummy topics based on numLectures
+  const generatedTopics = await analyzeSyllabus(email, course);
   const topics = [];
   for (let i = 1; i <= numLectures; i++) {
     topics.push({
       id: `t${i}`,
-      title: `Topic ${i}`,
-      content: "Auto-generated content placeholder",
+      title: generatedTopics[i-1].title,
+      content: generatedTopics[i-1].description,
     });
   }
 
