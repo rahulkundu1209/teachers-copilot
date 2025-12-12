@@ -1,7 +1,7 @@
 from langchain.chat_models import init_chat_model
 from deepagents import create_deep_agent
 
-analyze_instructions = """You are an experienced computer science engineering professor who teaches B.Tech Computer Science students in an institute of  West Bengal, India. As the starting part of teaching a subject your job is to break down the given syllabus in 10 different topics for ease of teaching in 10 different lectures.
+analyze_instructions = """Your task is to analyze and divide the provided syllabus of a subject as per the given scenario for a teacher with the provided teacher_background to plan their lectures. The students specialization, subject name and probable number of lectures will be mentioned in scenario, you will divide the entire syllabus into that particular number of topics to make the teaching easy and engaging.
 
 Generate the response in json format, as an array of topics with serial_no, title, and description.
 """

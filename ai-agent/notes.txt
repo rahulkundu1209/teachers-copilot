@@ -1,2 +1,12 @@
 I have created the analyzer assistant, which will divide the topic as per the number of lectures and the given detailed syllabus.
 It is inside the analyze_syllabus folder. I can give it the syllaubs by an api call(details in postman), as of now the number of lectures planned is hard coded.
+
+How to Run the Project
+1. Create and Activate the Virtual Environment
+> uv venv --python 3.11
+> uv sync
+> .venv\\Scripts\\activate
+2. Run the AI Agent
+Move to the agent directory and
+> uv pip install -r requirements.txt
+> langgraph dev
