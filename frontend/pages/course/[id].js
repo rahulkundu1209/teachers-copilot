@@ -40,7 +40,7 @@ export default function CoursePage() {
             <div key={t.id || idx} className="flex justify-between items-center border rounded p-3">
               <div>
                 <div className="font-semibold">{idx + 1}. {t.title}</div>
-                <div className="text-xs text-slate-500">Lectures: {t.lectures}</div>
+                <div className="text-xs text-slate-500">Description: {t.content}</div>
               </div>
               <div>
                 {/* Link to topic page without <a> */}
