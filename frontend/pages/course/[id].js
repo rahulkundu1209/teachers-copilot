@@ -2,12 +2,30 @@ import { useRouter } from "next/router";
 import Layout from "../../components/Layout";
 import { useCourses } from "../../context/CourseContext";
 import Link from "next/link";
+import Head from "next/head"
+import { useState, useEffect } from "react";
 
 export default function CoursePage() {
   const router = useRouter();
   const { id } = router.query;
   const { getCourseById } = useCourses();
   const course = getCourseById(id);
+
+    const [courseName, setCourseName] = useState("");
+
+  useEffect(() => {
+    if (!id) return;
+    
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const token = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
+    
+    fetch(`${API_BASE}/api/courses/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => setCourseName(data.name))
+      .catch(err => console.error("Error fetching course:", err));
+  }, [id]);
 
   if (!course) {
     return (
@@ -26,6 +44,9 @@ export default function CoursePage() {
 
   return (
     <Layout>
+      <Head>
+        <title>course - {courseName || "Loading"}</title>
+      </Head>
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-xl font-bold">{course.name}</h2>
