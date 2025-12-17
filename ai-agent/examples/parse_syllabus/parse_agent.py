@@ -27,7 +27,7 @@ class InvokeRequest(BaseModel):
 
 # System prompt for extraction
 extract_instructions = """You are a syllabus parsing expert. Your task is to extract only the content related to the specified subject from the provided course name.
-IMPORTANT: Exclude/skip any "Course Outcomes", "Learning Outcomes", or "Objectives" sections. Return ONLY the syllabus content.
+IMPORTANT: Exclude/skip any "Course Outcomes", "Code", "Credit", "Learning Outcomes", or "Objectives" sections. Return ONLY the syllabus content.
 Return ONLY the extracted section with no additional commentary. If the subject is not found, return the full syllabus."""
 
 # Initialize model
