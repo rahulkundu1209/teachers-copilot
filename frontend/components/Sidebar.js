@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import profileImage from "../assets/profile.png"; 
+// import profileImage from "../assets/profile.png"; 
 
 export default function Sidebar() {
   const router = useRouter();
@@ -151,13 +151,17 @@ export default function Sidebar() {
       <div className="px-4 pb-6">
         <div className="flex items-center gap-3">
           <div className={`${collapsed ? "w-10 h-10" : "w-12 h-12"} rounded-full overflow-hidden bg-white`}>
-            <img src={profileImage.src} alt="profile" className="w-full h-full object-cover" />
+            <img src="" alt="" className="w-full h-full object-cover" />
           </div>
 
           {!collapsed && (
             <div>
               <div className="font-medium">{user?.name || "Dr. Raj Malik"}</div>
-              <div className="text-xs text-gray-500">View Profile</div>
+              
+              <Link href="/create-profile?mode=edit" className="text-xs text-gray-500 hover:text-gray-700 cursor-pointer transition">
+                view profile
+              </Link>
+              
             </div>
           )}
         </div>

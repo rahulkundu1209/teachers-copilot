@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { useRouter } from "next/router";
+import Head from "next/head";
 
 export default function Settings() {
   const { user, initialized } = useAuth();
@@ -60,6 +61,9 @@ export default function Settings() {
 
   return (
     <Layout>
+      <Head>
+        <title>Settings - Teacher's Copilot</title>
+      </Head>
       <div className="mb-6">
         <h2 className="text-xl font-bold">Settings</h2>
         <p className="text-sm text-slate-500">Profile and preferences</p>

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
+import Head from "next/head";
 
 export default function Register() {
   const router = useRouter();
@@ -99,6 +100,9 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F4F6F8]">
+      <Head>
+        <title>Signup - Teacher's Copilot</title>
+      </Head>
       <div
         className="w-full max-w-4xl rounded-2xl shadow-xl py-16 px-10"
         style={{ background: "rgba(217,217,217,0.38)" }}

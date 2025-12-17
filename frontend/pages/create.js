@@ -4,6 +4,7 @@ import Layout from "../components/Layout";
 import { useRouter } from "next/router";
 import { useAuth } from "../context/AuthContext";
 import { useCourses } from "../context/CourseContext";
+import Head from "next/head";
 
 // This page requires the backend to be running. We poll the health endpoint
 // and redirect back to dashboard if the backend is unavailable.
@@ -48,6 +49,23 @@ export default function CreateCoursePage() {
   const [additionalPrompt, setAdditionalPrompt] = useState("");
   const [uploadLabel, setUploadLabel] = useState("No file chosen");
   const [loading, setLoading] = useState(false);
+
+  const handleSyllabusChange = (e) => {
+  let text = e.target.value;
+  
+  // Auto-format the text:
+  // 1. Trim extra whitespace at start/end
+  // 2. Replace multiple spaces with single space
+  // 3. Replace multiple newlines with single newline
+  // 4. Normalize spacing around punctuation
+  
+  text = text.trim();                           // Remove leading/trailing spaces
+  text = text.replace(/\s{2,}/g, ' ');         // Replace multiple spaces with single space
+  text = text.replace(/\n{2,}/g, '\n');        // Replace multiple newlines with single newline
+  text = text.replace(/\s+\n/g, '\n');         // Remove spaces before newlines
+  
+  setSyllabusText(text);
+};
 
   function handleFileChange(e) {
     const f = e.target.files && e.target.files[0];
@@ -110,6 +128,9 @@ export default function CreateCoursePage() {
 
   return (
     <Layout>
+      <Head>
+        <title>Create course</title>
+      </Head>
       <div className="py-6">
 
         {!checkingBackend && !backendAvailable && (
@@ -191,7 +212,7 @@ export default function CreateCoursePage() {
                 <div className="col-span-7">
                   <textarea
                     value={syllabusText}
-                    onChange={(e) => setSyllabusText(e.target.value)}
+                    onChange={handleSyllabusChange}
                     placeholder="Paste syllabus here..."
                     className="w-full min-h-[160px] rounded-lg p-4"
                     style={{ background: "#909DAE" }}

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "../context/AuthContext";
+import Head from "next/head";
 
 export default function CreateProfile() {
   const { user, updateProfile, initialized } = useAuth();
@@ -190,6 +191,9 @@ export default function CreateProfile() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-start justify-center py-12">
+      <Head>
+        <title>{router?.query?.mode === "edit" ? "Edit Profile" : "Create Profile"} - Teacher's Copilot</title>
+      </Head>
       <div className="w-full max-w-5xl p-8 bg-white rounded-2xl shadow">
         <h2 className="text-2xl font-semibold mb-6">
           {router?.query?.mode === "edit" ? "Edit Profile" : "Create Profile"}
