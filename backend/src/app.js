@@ -1,6 +1,7 @@
 
 import express, { json } from "express";
 import cors from "cors";
+import syllabusParseRoutes from "./routes/syllabusParseRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
@@ -13,6 +14,7 @@ import generateRoutes from "./routes/generateRoutes.js";
 const app = express();
 app.use(cors()); // allow frontend to call backend (dev)
 app.use(json()); // parse JSON body
+//app.use(json({ limit: "50mb" }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
@@ -22,5 +24,6 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/generate", generateRoutes);
+app.use("/api/parse-syllabus", syllabusParseRoutes);
 
 export default app;

@@ -8,7 +8,9 @@
     "start": "next start -p 3000"
   },
   "dependencies": {
+    "docx-parser": "^0.2.1",
     "next": "13.5.8",
+    "pdfjs-dist": "^5.4.449",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   },
