@@ -3,6 +3,7 @@ import { useCourses } from "../context/CourseContext";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
 
 export default function History() {
   const { history, reloadHistory } = useCourses();
@@ -56,6 +57,9 @@ export default function History() {
 
   return (
     <Layout>
+      <Head>
+        <title>History - Teacher's Copilot</title>
+      </Head>
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold">History</h2>

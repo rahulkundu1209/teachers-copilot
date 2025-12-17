@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuth } from "../context/AuthContext";
+import Head from "next/head";
 
 export default function Login() {
   const router = useRouter();
@@ -99,6 +100,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F4F6F8]">
+      <Head>
+        <title>login - Teacher's Copilot</title>
+      </Head>
       <div
         className="w-full max-w-4xl rounded-2xl shadow-xl py-16 px-10"
         style={{ background: "rgba(217,217,217,0.38)" }}

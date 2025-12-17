@@ -5,6 +5,7 @@ import { useCourses } from "../context/CourseContext";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
 
 export default function DashboardPage() {
   const { courses } = useCourses();
@@ -78,6 +79,9 @@ export default function DashboardPage() {
 
   return (
     <Layout>
+      <Head>
+        <title>Dashboard - Teacher's Copilot</title>
+      </Head>
       <div className="pt-4 pb-8">
         <div className="flex items-start gap-6">
           <div>

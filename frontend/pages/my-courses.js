@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
 
 export default function MyCourses() {
   const { courses, reloadCourses } = useCourses();
@@ -49,6 +50,9 @@ export default function MyCourses() {
 
   return (
     <Layout>
+      <Head>
+        <title>My Courses - Teacher's Copilot</title>
+      </Head>
       <div className="mb-6">
         <h2 className="text-xl font-bold">My Courses</h2>
         <p className="text-sm text-slate-500">Saved courses</p>
