@@ -67,10 +67,50 @@ export default function CreateCoursePage() {
   setSyllabusText(text);
 };
 
-  function handleFileChange(e) {
+  /*function handleFileChange(e) {
     const f = e.target.files && e.target.files[0];
     setUploadLabel(f ? f.name : "No file chosen");
+  }*/
+
+    async function handleFileChange(e) {
+  const f = e.target.files && e.target.files[0];
+  setUploadLabel(f ? f.name : "No file chosen");
+  
+  if (f && name) {
+    try {
+      // Use FormData instead of sending raw content
+      const formData = new FormData();
+      formData.append("file", f);
+      formData.append("subjectName", name);
+      
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const token = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
+      
+      const response = await fetch(`${API_BASE}/api/parse-syllabus`, {
+        method: "POST",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+          // Don't set Content-Type, let browser set it with boundary
+        },
+        body: formData
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSyllabusText(data.extractedText);
+      } else {
+        alert("Error parsing syllabus. Using full file content.");
+        const fileContent = await f.text();
+        setSyllabusText(fileContent);
+      }
+    } catch (err) {
+      console.error("File parse error:", err);
+      alert("Error reading file: " + err.message);
+    }
+  } else if (f && !name) {
+    alert("Please enter a Course Name first to extract the relevant subject.");
   }
+}
 
   async function handleGenerate(e) {
     e.preventDefault();
@@ -243,7 +283,7 @@ export default function CreateCoursePage() {
                     <input
                       id="create-file-input"
                       type="file"
-                      accept=".pdf,image/*"
+                      accept=".txt,.pdf,image/*"
                       onChange={handleFileChange}
                       className="hidden"
                     />
