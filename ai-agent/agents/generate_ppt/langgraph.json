@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "generatePPT": "./pptGenerator.py:agent"
+  },
+  "env": "../../.env"
+}
