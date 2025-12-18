@@ -7,6 +7,6 @@ How to Run the Project
 > uv sync
 > .venv\\Scripts\\activate
 2. Run the AI Agent
-Move to the agent directory and
+Move to the agent directory and(./examples/analyze_syllabus)
 > uv pip install -r requirements.txt
 > langgraph dev
