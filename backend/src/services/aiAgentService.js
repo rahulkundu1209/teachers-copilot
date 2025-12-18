@@ -45,3 +45,36 @@ export async function analyzeSyllabus(email, course) {
     console.error(error);
   }
 }
+
+export async function generatePPT(subject, description, threadId=""){
+  const AIAGENT_BASE_URL = process.env.AIAGENT_BASE_URL;
+  const PPTGENERATOR_ASSISTANT_ID = process.env.PPTGENERATOR_ASSISTANT_ID;
+  const prompt = `Subject: ${subject}\nTopic Description: ${description}`;
+  const options = {
+    method: "POST",
+    url: `${AIAGENT_BASE_URL}a2a/${PPTGENERATOR_ASSISTANT_ID}`,
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    data: {
+      jsonrpc: "2.0",
+      id: "",
+      method: "message/send",
+      params: {
+        message: {
+          role: "user",
+          parts: [{ kind: "text", text: JSON.stringify(prompt) }],
+          messageId: "",
+        },
+        thread: { threadId: threadId },
+      },
+    },
+  };
+  try {
+    const { data } = await axios.request(options);
+    if(data){
+      const text = data.result.artifacts[0].parts[0].text;
+      return text;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
