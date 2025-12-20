@@ -67,7 +67,7 @@ async def invoke_agent(request: InvokeRequest):
         if not isinstance(output_text, str):
             output_text = str(output_text)
         
-        print(f"Agent extracted text (first 200 chars): {output_text[:200] if output_text else 'EMPTY'}")
+        print(f"Agent extracted text (first 2000 chars): {output_text[:2000] if output_text else 'EMPTY'}")
         
         return {
             "output": {

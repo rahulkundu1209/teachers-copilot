@@ -1,9 +1,14 @@
 import mongoose from "mongoose";
 
+// const ContentSchema = new mongoose.Schema({
+//   pptLink: {type: String, default: ""},
+// });
+
 const TopicSchema = new mongoose.Schema({
   id: { type: String, required: true },
   title: { type: String, required: true },
-  content: { type: String, default: "" },
+  content: {type: String, default: ""},
+  pptLink: {type: String, default: ""},
 }, { _id: false });
 
 const CourseSchema = new mongoose.Schema({

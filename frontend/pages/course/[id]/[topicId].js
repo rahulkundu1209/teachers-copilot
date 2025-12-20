@@ -21,7 +21,7 @@ export default function TopicPage() {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
     const topic = (course && course.topics || []).find(t => String(t.id) === String(topicId));
-    const reqBody = { subject: course ? course.name : "General", description: topic && topic.content };
+    const reqBody = { topicId, courseId: id, subject: course ? course.name : "General", description: topic && topic.content };
     fetch(`${API_BASE}/api/select`, { method: "POST", headers, body: JSON.stringify(reqBody) })
     .then(res => res.json())
     .then(data => {
