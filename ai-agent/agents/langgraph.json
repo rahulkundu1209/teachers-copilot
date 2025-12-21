@@ -1,7 +1,8 @@
 {
   "dependencies": ["."],
   "graphs": {
+    "analyzeSyllabus": "./analyzer.py:agent",
     "generatePPT": "./pptGenerator.py:agent"
   },
-  "env": "../../.env"
+  "env": "../.env"
 }

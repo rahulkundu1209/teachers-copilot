@@ -10,3 +10,5 @@ How to Run the Project
 Move to a agent directory and(ex- ./agents/analyze_syllabus)
 > uv pip install -r requirements.txt
 > langgraph dev
+
+The generate ppt agent will give error if google authentication is not done properly. It will try to use the ppt generator tool but as the authetication is not done it will not work and groq api call will be made again and again.
