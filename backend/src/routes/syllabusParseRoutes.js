@@ -15,7 +15,6 @@ router.post("/", verifyToken, upload.single("file"), async (req, res) => {
     if (!subjectName || !req.file) {
       return res.status(400).json({ error: "Missing subjectName or file" });
     }
-
     const extractedText = await parseSyllabusFile(subjectName, req.file.path);
     
     res.json({ extractedText });

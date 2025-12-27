@@ -39,7 +39,10 @@ export default function CreateCoursePage() {
 
     check();
     const id = setInterval(check, 5000);
-    return () => { mounted = false; clearInterval(id); };
+    return () => {
+      mounted = false;
+      clearInterval(id);
+    };
   }, []);
 
   const [name, setName] = useState("");
@@ -51,72 +54,81 @@ export default function CreateCoursePage() {
   const [loading, setLoading] = useState(false);
 
   const handleSyllabusChange = (e) => {
-  let text = e.target.value;
-  
-  // Auto-format the text:
-  // 1. Trim extra whitespace at start/end
-  // 2. Replace multiple spaces with single space
-  // 3. Replace multiple newlines with single newline
-  // 4. Normalize spacing around punctuation
-  
-  text = text.trim();                           // Remove leading/trailing spaces
-  text = text.replace(/\s{2,}/g, ' ');         // Replace multiple spaces with single space
-  text = text.replace(/\n{2,}/g, '\n');        // Replace multiple newlines with single newline
-  text = text.replace(/\s+\n/g, '\n');         // Remove spaces before newlines
-  
-  setSyllabusText(text);
-};
+    let text = e.target.value;
+
+    // Auto-format the text:
+    // 1. Trim extra whitespace at start/end
+    // 2. Replace multiple spaces with single space
+    // 3. Replace multiple newlines with single newline
+    // 4. Normalize spacing around punctuation
+
+    text = text.trim(); // Remove leading/trailing spaces
+    text = text.replace(/\s{2,}/g, " "); // Replace multiple spaces with single space
+    text = text.replace(/\n{2,}/g, "\n"); // Replace multiple newlines with single newline
+    text = text.replace(/\s+\n/g, "\n"); // Remove spaces before newlines
+
+    setSyllabusText(text);
+  };
 
   /*function handleFileChange(e) {
     const f = e.target.files && e.target.files[0];
     setUploadLabel(f ? f.name : "No file chosen");
   }*/
 
-    async function handleFileChange(e) {
-  const f = e.target.files && e.target.files[0];
-  setUploadLabel(f ? f.name : "No file chosen");
-  
-  if (f && name) {
-    try {
-      // Use FormData instead of sending raw content
-      const formData = new FormData();
-      formData.append("file", f);
-      formData.append("subjectName", name);
-      
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const token = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
-      
-      const response = await fetch(`${API_BASE}/api/parse-syllabus`, {
-        method: "POST",
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-          // Don't set Content-Type, let browser set it with boundary
-        },
-        body: formData
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setSyllabusText(data.extractedText);
-      } else {
-        alert("Error parsing syllabus. Using full file content.");
-        const fileContent = await f.text();
-        setSyllabusText(fileContent);
+  async function handleFileChange(e) {
+    const f = e.target.files && e.target.files[0];
+    setUploadLabel(f ? f.name : "No file chosen");
+
+    if (f && name) {
+      try {
+        // Use FormData instead of sending raw content
+        const formData = new FormData();
+        formData.append("file", f);
+        formData.append("subjectName", name);
+
+        const API_BASE =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("tc_token")
+            : null;
+
+        console.log("File content: ", f);
+        const response = await fetch(`${API_BASE}/api/parse-syllabus`, {
+          method: "POST",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            // Don't set Content-Type, let browser set it with boundary
+          },
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Extracted syllabus text:", data.extractedText);
+          setSyllabusText(data.extractedText);
+        } else {
+          alert("Error parsing syllabus. Using full file content.");
+          const fileContent = await f.text();
+          console.log("Full file content:", fileContent);
+          setSyllabusText(fileContent);
+        }
+      } catch (err) {
+        console.error("File parse error:", err);
+        alert("Error reading file: " + err.message);
       }
-    } catch (err) {
-      console.error("File parse error:", err);
-      alert("Error reading file: " + err.message);
+    } else if (f && !name) {
+      alert(
+        "Please enter a Course Name first to extract the relevant subject."
+      );
     }
-  } else if (f && !name) {
-    alert("Please enter a Course Name first to extract the relevant subject.");
   }
-}
 
   async function handleGenerate(e) {
     e.preventDefault();
-    
+
     if (loading) return; // Prevent duplicate submissions
-    
+
     if (!backendAvailable) {
       alert("Backend unavailable — start the backend to generate content.");
       return;
@@ -132,9 +144,11 @@ export default function CreateCoursePage() {
     };
 
     try {
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const token = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
-      
+      const API_BASE =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
+
       const headers = { "Content-Type": "application/json" };
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
@@ -143,12 +157,12 @@ export default function CreateCoursePage() {
         headers,
         body: JSON.stringify(payload),
       });
-      
+
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData?.error || "Generation failed");
       }
-      
+
       const json = await res.json();
       const generated = json?.course;
 
@@ -172,7 +186,6 @@ export default function CreateCoursePage() {
         <title>Create course</title>
       </Head>
       <div className="py-6">
-
         {!checkingBackend && !backendAvailable && (
           <div className="mb-4 p-4 rounded bg-red-50 border border-red-200 text-red-800">
             Backend unavailable. Start the backend to use the Create flow.
@@ -187,16 +200,17 @@ export default function CreateCoursePage() {
              ONLY CHANGE YOU ASKED FOR:
              This wrapper background is now #F0F0F0
            <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */}
-        <div
-          className="mt-6 rounded-2xl p-6"
-          style={{ background: "#F0F0F0" }}
-        >
-          <div className="bg-white rounded-xl p-6 tc-card" style={{ background: "transparent" }}>
+        <div className="mt-6 rounded-2xl p-6" style={{ background: "#F0F0F0" }}>
+          <div
+            className="bg-white rounded-xl p-6 tc-card"
+            style={{ background: "transparent" }}
+          >
             <form onSubmit={handleGenerate} className="space-y-6">
-
               {/* Course Name */}
               <div className="grid grid-cols-12 items-center gap-4">
-                <label className="col-span-2 text-sm font-medium">Course Name :</label>
+                <label className="col-span-2 text-sm font-medium">
+                  Course Name :
+                </label>
                 <div className="col-span-10">
                   <input
                     value={name}
@@ -210,7 +224,9 @@ export default function CreateCoursePage() {
 
               {/* Branch Name */}
               <div className="grid grid-cols-12 items-center gap-4">
-                <label className="col-span-2 text-sm font-medium">Branch Name :</label>
+                <label className="col-span-2 text-sm font-medium">
+                  Branch Name :
+                </label>
                 <div className="col-span-10">
                   <input
                     value={branch}
@@ -272,13 +288,25 @@ export default function CreateCoursePage() {
                       className="w-20 h-20 bg-white rounded-md flex items-center justify-center shadow cursor-pointer"
                     >
                       <svg width="28" height="28" fill="none">
-                        <path d="M12 5v10" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" />
-                        <path d="M7 10l5-5 5 5" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" />
+                        <path
+                          d="M12 5v10"
+                          stroke="#0f172a"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M7 10l5-5 5 5"
+                          stroke="#0f172a"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
                       </svg>
                     </button>
 
                     <div className="mt-3 text-sm">Upload Syllabus</div>
-                    <div className="mt-2 text-xs text-gray-600">{uploadLabel}</div>
+                    <div className="mt-2 text-xs text-gray-600">
+                      {uploadLabel}
+                    </div>
 
                     <input
                       id="create-file-input"
@@ -294,7 +322,9 @@ export default function CreateCoursePage() {
               {/* Additional Prompt */}
               <div className="grid grid-cols-12 gap-4">
                 <div className="col-span-2">
-                  <label className="text-sm font-medium">Additional Prompt:</label>
+                  <label className="text-sm font-medium">
+                    Additional Prompt:
+                  </label>
                 </div>
 
                 <div className="col-span-10">
@@ -321,7 +351,6 @@ export default function CreateCoursePage() {
             </form>
           </div>
         </div>
-
       </div>
     </Layout>
   );

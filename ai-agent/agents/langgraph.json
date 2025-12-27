@@ -2,6 +2,7 @@
   "dependencies": ["."],
   "graphs": {
     "analyzeSyllabus": "./analyzer.py:agent",
+    "parseSyllabus": "./syllabusParser.py:agent",
     "generatePPT": "./pptGenerator.py:agent"
   },
   "env": "../.env"

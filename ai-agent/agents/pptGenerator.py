@@ -106,6 +106,15 @@ def create_google_slides(title: str, slides: List[SlideContent]) -> str:
             body={"requests": requests}
         ).execute()
 
+        # Step D: Share the presentation with anyone (read-only access)
+        drive_service.permissions().create(
+            fileId=presentation_id,
+            body={
+                "type": "anyone",
+                "role": "reader"
+            }
+        ).execute()
+
         return f"Successfully created! URL: https://docs.google.com/presentation/d/{presentation_id}/edit"
 
     except Exception as e:

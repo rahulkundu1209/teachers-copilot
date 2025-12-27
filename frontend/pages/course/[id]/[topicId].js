@@ -68,13 +68,13 @@ export default function TopicPage() {
         </div>
 
         <div>
-          <h3 className="font-semibold mb-2">Quiz (sample)</h3>
-          <div className="text-sm text-slate-700">{topic.quiz || "1. Sample question?"}</div>
+          <h3 className="font-semibold mb-2">Real World Analogy/Industry News</h3>
+          <div className="text-sm text-slate-700">{topic.quiz || "Coming Soon..."}</div>
         </div>
 
         <div>
-          <h3 className="font-semibold mb-2">Assignments</h3>
-          <div className="text-sm text-slate-700">{topic.assignments || "Assignment description placeholder."}</div>
+          <h3 className="font-semibold mb-2">Assessments</h3>
+          <div className="text-sm text-slate-700">{topic.assignments || "Coming Soon..."}</div>
         </div>
       </div>
     </Layout>
