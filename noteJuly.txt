@@ -1,0 +1,2 @@
+Which approach will be better to implement user's own google drive ppt save?
+Taking the json response from the ai agent and then handling google slides creation from backend or implementing authentication in ai agent?

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getProfile } from "./profileService.js";
+import { createPresentationFromPayload } from "./googleSlidesService.js";
 
 export async function analyzeSyllabus(email, course) {
   const AIAGENT_BASE_URL = process.env.AIAGENT_BASE_URL;
@@ -46,7 +47,7 @@ export async function analyzeSyllabus(email, course) {
   }
 }
 
-export async function generatePPT(subject, description, threadId=""){
+export async function generatePPT(email, subject, description, threadId=""){
   const AIAGENT_BASE_URL = process.env.AIAGENT_BASE_URL;
   const PPTGENERATOR_ASSISTANT_ID = process.env.PPTGENERATOR_ASSISTANT_ID;
   const prompt = `Subject: ${subject}\nTopic Description: ${description}`;
@@ -70,11 +71,28 @@ export async function generatePPT(subject, description, threadId=""){
   };
   try {
     const { data } = await axios.request(options);
-    if(data){
-      const text = data.result.artifacts[0].parts[0].text;
-      return text;
+    console.log("generatePPT ai-agent response data:", data);
+    if (data) {
+      const text =
+        data.result.artifacts?.[0]?.parts?.[0]?.text ||
+        data.result.history?.[1]?.parts?.[0]?.text ||
+        "";
+
+      if (!text) {
+        throw new Error("No payload returned from PPT generator agent");
+      }
+
+      let payload;
+      try {
+        payload = JSON.parse(text);
+      } catch (error) {
+        throw new Error(`Invalid JSON payload from PPT generator agent: ${error.message}`);
+      }
+
+      return await createPresentationFromPayload(email, payload);
     }
   } catch (error) {
-    console.error(error);
+    console.error("generatePPT error:", error);
+    throw error;
   }
 }

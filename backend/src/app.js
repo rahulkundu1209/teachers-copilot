@@ -10,6 +10,7 @@ import settingsRoutes from "./routes/settingsRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import healthRoutes from "./routes/healthRoutes.js";
 import generateRoutes from "./routes/generateRoutes.js";
+import googleRoutes from "./routes/googleRoutes.js";
 import selectRoutes from "./routes/selectRoutes.js";
 
 const app = express();
@@ -25,6 +26,7 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/generate", generateRoutes);
+app.use("/api/google", googleRoutes);
 app.use("/api/parse-syllabus", syllabusParseRoutes);
 app.use("/api/select", selectRoutes);
 

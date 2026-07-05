@@ -387,8 +387,8 @@ git clone <repository-url>
 cd teachers-copilot
 
 # Terminal 1 - AI Agent
-cd ai-agent && uv venv --python 3.11 && uv sync && . venv/Scripts/activate
-cd agents/analyze_syllabus && uv pip install -r requirements.txt && langgraph dev
+cd ai-agent && uv venv --python 3.11 && uv sync && .venv\Scripts\activate
+cd agents && uv pip install -r requirements.txt && langgraph dev
 
 # Terminal 2 - Backend
 cd backend && npm install && npm run dev

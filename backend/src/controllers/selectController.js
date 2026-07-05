@@ -1,5 +1,6 @@
 import Course from "../models/Course.js";
 import { generatePPT } from "../services/aiAgentService.js";
+import * as googleService from "../services/googleSlidesService.js";
 
 // The aiAgentService's generatePPT(subject, description, threadId="") will be used to create PPTs based on the subject and description provided.
 export async function selectTopic(req, res){
@@ -23,10 +24,16 @@ export async function selectTopic(req, res){
     if (!topic) {
       return res.status(404).json({ error: "Topic not found in the specified course" });
     }
-    if(topic.pptLink){
+    if (topic.pptLink) {
       return res.json({ url: topic.pptLink });
     }
-    const url = await generatePPT(subject, description);
+
+    const hasGoogle = await googleService.userHasGoogleTokens(email);
+    if (!hasGoogle) {
+      return res.status(403).json({ needsGoogleConnect: true });
+    }
+
+    const url = await generatePPT(email,subject, description);
     topic.pptLink = url;
     await course.save();
 

@@ -5,37 +5,94 @@ import { useEffect, useState } from "react";
 
 export default function TopicPage() {
   const router = useRouter();
-  const { id, topicId } = router.query;
+  const { id, topicId, google_connected } = router.query;
   const { getCourseById } = useCourses();
   const course = getCourseById(id);
-  
+
   const [slideUrl, setSlideUrl] = useState("");
+  const [loadingSlides, setLoadingSlides] = useState(false);
+  const [slideError, setSlideError] = useState("");
+
+  const topic = (course?.topics || []).find((t) => String(t.id) === String(topicId));
 
   useEffect(() => {
-    if (!topicId) return;
-    // Fetch slide URL from backend
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    const token = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
-    const headers = {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
-    const topic = (course && course.topics || []).find(t => String(t.id) === String(topicId));
-    const reqBody = { topicId, courseId: id, subject: course ? course.name : "General", description: topic && topic.content };
-    fetch(`${API_BASE}/api/select`, { method: "POST", headers, body: JSON.stringify(reqBody) })
-    .then(res => res.json())
-    .then(data => {
-      console.log("Fetched slide URL data:", data);
+    if (!topic) return;
+    if (topic.pptLink) {
+      setSlideUrl(topic.pptLink);
+    }
+  }, [topic]);
+
+  useEffect(() => {
+    if (google_connected === "1" && topic) {
+      createSlides();
+      const newQuery = { ...router.query };
+      delete newQuery.google_connected;
+      router.replace({ pathname: router.pathname, query: newQuery }, undefined, {
+        shallow: true,
+      });
+    }
+  }, [google_connected, topic]);
+
+  const createSlides = async () => {
+    if (!topic || !course) return;
+
+    setLoadingSlides(true);
+    setSlideError("");
+
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const token = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
+      const reqBody = {
+        topicId,
+        courseId: id,
+        subject: course.name || "General",
+        description: topic.content || "",
+      };
+
+      const res = await fetch(`${API_BASE}/api/select`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(reqBody),
+      });
+      const data = await res.json();
+
+      if (res.status === 403 && data.needsGoogleConnect) {
+        const authUrlRes = await fetch(
+          `${API_BASE}/api/google/auth-url?returnUrl=${encodeURIComponent(window.location.href)}`,
+          { method: "GET", headers }
+        );
+        const authData = await authUrlRes.json();
+        if (authUrlRes.ok && authData.url) {
+          window.location.href = authData.url;
+          return;
+        }
+        throw new Error(authData.error || "Failed to get Google auth URL");
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to generate slides");
+      }
+
+      if (!data.url) {
+        throw new Error("No slide URL returned from backend");
+      }
+
       setSlideUrl(data.url);
-    })
-    .catch(err => {
-      console.error("Failed to fetch slide URL", err);
-    });
-  }, [course]);
+    } catch (err) {
+      setSlideError(err.message || "Slide creation failed");
+    } finally {
+      setLoadingSlides(false);
+    }
+  };
 
   const openSlideHandler = (e) => {
     e.preventDefault();
-    if(slideUrl){
+    if (slideUrl) {
       window.open(slideUrl, "_blank");
     } else {
       alert("Slide URL not available");
@@ -43,8 +100,6 @@ export default function TopicPage() {
   };
 
   if (!course) return <Layout><div className="bg-white p-6 rounded shadow">Loading…</div></Layout>;
-
-  const topic = (course.topics || []).find(t => String(t.id) === String(topicId));
   if (!topic) return <Layout><div className="bg-white p-6 rounded shadow">Topic not found</div></Layout>;
 
   return (
@@ -63,7 +118,20 @@ export default function TopicPage() {
         <div>
           <h3 className="font-semibold mb-2">Slides outline</h3>
           <div className="text-sm text-slate-700">
-            {slideUrl ? <button className="bg-indigo-600 text-white px-3 py-1 rounded" onClick={openSlideHandler}>Open Slides</button> : "Loading slides…"}
+            {slideUrl ? (
+              <button className="bg-indigo-600 text-white px-3 py-1 rounded" onClick={openSlideHandler}>
+                Open Slides
+              </button>
+            ) : (
+              <button
+                className="bg-indigo-600 text-white px-3 py-1 rounded"
+                onClick={createSlides}
+                disabled={loadingSlides}
+              >
+                {loadingSlides ? "Creating slides…" : "Create Slides"}
+              </button>
+            )}
+            {slideError ? <div className="text-red-600 mt-2">{slideError}</div> : null}
           </div>
         </div>
 
