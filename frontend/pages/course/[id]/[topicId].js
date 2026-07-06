@@ -2,6 +2,8 @@ import { useRouter } from "next/router";
 import Layout from "../../../components/Layout";
 import { useCourses } from "../../../context/CourseContext";
 import { useEffect, useState } from "react";
+import Head from "next/head";
+import Breadcrumb from "../../../components/Breadcrumb";
 
 export default function TopicPage() {
   const router = useRouter();
@@ -104,10 +106,33 @@ export default function TopicPage() {
 
   return (
     <Layout>
-      <div className="mb-4">
-        <h2 className="text-xl font-bold">{topic.title}</h2>
-        <div className="text-sm text-slate-500">Part of course: {course.name}</div>
-      </div>
+      <Head>
+  <title>{topic.title} | Teacher's Copilot</title>
+</Head>
+  <Breadcrumb
+    backHref={`/course/${course.id}`}
+    items={[
+      {
+        label: "My Courses",
+        href: "/my-courses",
+      },
+      {
+        label: course.name,
+        href: `/course/${course.id}`,
+      },
+      {
+        label: topic.title,
+      },
+    ]}
+  />
+
+  <div className="mb-4">
+    <h2 className="text-xl font-bold">{topic.title}</h2>
+    <div className="text-sm text-slate-500">
+      Part of course: {course.name}
+    </div>
+  </div>
+
 
       <div className="bg-white p-6 rounded shadow space-y-6">
         <div>

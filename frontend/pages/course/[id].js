@@ -4,6 +4,7 @@ import { useCourses } from "../../context/CourseContext";
 import Link from "next/link";
 import Head from "next/head"
 import { useState, useEffect } from "react";
+import Breadcrumb from "../../components/Breadcrumb";
 
 export default function CoursePage() {
   const router = useRouter();
@@ -47,12 +48,28 @@ export default function CoursePage() {
       <Head>
         <title>course - {courseName || "Loading"}</title>
       </Head>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-xl font-bold">{course.name}</h2>
-          <div className="text-sm text-slate-500">{course.branch} • {course.numLectures} lectures</div>
-        </div>
+  <Breadcrumb
+    backHref="/my-courses"
+    items={[
+      {
+        label: "My Courses",
+        href: "/my-courses",
+      },
+      {
+        label: course.name,
+      },
+    ]}
+  />
+
+  <div className="flex items-center justify-between mb-4">
+    <div>
+      <h2 className="text-xl font-bold">{course.name}</h2>
+      <div className="text-sm text-slate-500">
+        {course.branch} • {course.numLectures} lectures
       </div>
+    </div>
+  </div>
+
 
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold mb-4">Lecture breakdown</h3>
