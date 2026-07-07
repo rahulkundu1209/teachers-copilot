@@ -19,6 +19,8 @@ export default function CoursePage() {
 
   const course = localCourse || remoteCourse;
 
+  
+
   async function copyJoinCode(code) {
     if (!code) return;
     try {
@@ -30,6 +32,8 @@ export default function CoursePage() {
   }
 
   const isStudent = user?.role === "student";
+  const backHref = isStudent ? "/studdashboard" : "/my-courses";
+  const backLabel = isStudent ? "Student Dashboard" : "My Courses";
 
   useEffect(() => {
     if (!id || localCourse) return;
@@ -104,17 +108,18 @@ export default function CoursePage() {
       </Head>
       <div className={isStudent ? "py-6" : ""}>
         <Breadcrumb
-          backHref="/my-courses"
+          backHref={backHref}
           items={[
             {
-              label: "My Courses",
-              href: "/my-courses",
+              label: backLabel,
+              href: backHref,
             },
             {
               label: course.name,
             },
           ]}
         />
+
 
         {course?.joinCode ? (
           <div className="mb-4 flex items-center gap-3 rounded-lg bg-slate-50 border px-4 py-3">

@@ -104,6 +104,9 @@ export default function TopicPage() {
   };
 
   const isStudent = user?.role === "student";
+  const backHref = `/course/${course.id}`;
+  const rootHref = isStudent ? "/studdashboard" : "/my-courses";
+  const rootLabel = isStudent ? "Student Dashboard" : "My Courses";
 
   if (!course) {
     const fallback = <div className="bg-white p-6 rounded shadow">Loading…</div>;
@@ -127,11 +130,11 @@ export default function TopicPage() {
         <title>{topic.title} | Teacher's Copilot</title>
       </Head>
       <Breadcrumb
-        backHref={`/course/${course.id}`}
+        backHref={backHref}
         items={[
           {
-            label: "My Courses",
-            href: "/my-courses",
+            label: rootLabel,
+            href: rootHref,
           },
           {
             label: course.name,
