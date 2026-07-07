@@ -3,9 +3,8 @@ import * as historyService from "../services/historyService.js";
 
 export async function list(req, res) {
   try {
-    const user = req.user;
-    const email = user && user.email;
-    const courses = await courseService.listCourses(email);
+    const user = req.user || {};
+    const courses = await courseService.listCourses(user);
     return res.json(courses);
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -77,5 +76,25 @@ export async function remove(req, res) {
     return res.json({ ok: true });
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+}
+
+export async function joinByCode(req, res) {
+  try {
+    const user = req.user || {};
+    if (user.role !== "student") {
+      return res.status(403).json({ error: "Only students can join by code" });
+    }
+
+    const { code } = req.body || {};
+    const joinedCourse = await courseService.joinCourseByCode(user.email, code);
+
+    return res.json({
+      ok: true,
+      courseId: joinedCourse.id,
+      course: joinedCourse,
+    });
+  } catch (err) {
+    return res.status(400).json({ error: err.message || "Could not join course" });
   }
 }

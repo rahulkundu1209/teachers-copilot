@@ -17,6 +17,8 @@ const CourseSchema = new mongoose.Schema({
   numLectures: { type: Number, required: true, min: 1 },
   syllabusText: { type: String, default: "" },
   additionalPrompt: { type: String, default: "" },
+  joinCode: { type: String, unique: true, sparse: true, index: true },
+  joinedStudentEmails: { type: [String], default: [] },
   topics: [TopicSchema],
   userId: { type: String, required: true }, // email of the user who created it
   createdAt: { type: Date, default: Date.now },

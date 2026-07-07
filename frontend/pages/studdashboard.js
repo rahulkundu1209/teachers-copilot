@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import { useAuth } from "../context/AuthContext";
+import { useCourses } from "../context/CourseContext";
 
 const courses = [
   { id: "course-1", name: "Math Basics", branch: "Science", numLectures: 12 },
@@ -12,9 +13,11 @@ const courses = [
 export default function StudentDashboardPage() {
   const router = useRouter();
   const { user, initialized, logout } = useAuth();
+  const { courses, reloadCourses } = useCourses();
   const [courseCode, setCourseCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [joinError, setJoinError] = useState("");
 
   useEffect(() => {
     if (initialized && !user) router.replace("/");
@@ -33,15 +36,50 @@ export default function StudentDashboardPage() {
 
   function handleJoinCourse(e) {
     e.preventDefault();
-    if (!courseCode.trim()) return;
+    const code = courseCode.trim().toUpperCase();
+
+    if (!code) {
+      setJoinError("Enter a course code");
+      return;
+    }
+
+    if (!/^[A-Z0-9]{6}$/.test(code)) {
+      setJoinError("Course code must be 6 alphanumeric characters");
+      return;
+    }
+
     setLoading(true);
-    window.setTimeout(() => {
-      setLoading(false);
-      setCourseCode("");
+    setJoinError("");
+
+    (async () => {
       try {
-        alert(`Course code ${courseCode.trim()} submitted. Hook this to your join-course API next.`);
-      } catch (err) {}
-    }, 300);
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const token = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
+        const headers = { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+
+        const res = await fetch(`${API_BASE}/api/courses/join`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ code }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data?.error || "Could not join course");
+        }
+
+        if (typeof reloadCourses === "function") {
+          await reloadCourses();
+        }
+
+        setCourseCode("");
+        router.push(`/course/${data.courseId}`);
+      } catch (err) {
+        setJoinError(err.message || "Could not join course");
+      } finally {
+        setLoading(false);
+      }
+    })();
   }
 
   function handleSignOut() {
@@ -143,10 +181,15 @@ export default function StudentDashboardPage() {
                   <input
                     type="text"
                     value={courseCode}
-                    onChange={(e) => setCourseCode(e.target.value)}
+                    onChange={(e) => {
+                      setCourseCode(e.target.value.toUpperCase());
+                      if (joinError) setJoinError("");
+                    }}
                     placeholder="Enter course code"
                     className="w-full h-16 rounded-2xl px-5 text-lg tracking-[0.12em] uppercase border border-slate-200 bg-[#eef4f8] text-[#0b1220] placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#a9bfd3]/30"
                   />
+
+                  {joinError ? <div className="text-sm text-red-600">{joinError}</div> : null}
 
                   <button
                     type="submit"
@@ -167,15 +210,26 @@ export default function StudentDashboardPage() {
                 </div>
 
                 <div className="space-y-3">
-                  {courses.map((course) => (
-                    <div key={course.id} className="rounded-2xl bg-[#edf2f7] px-4 py-4 flex items-start justify-between gap-4">
-                      <div>
-                        <div className="font-semibold text-[#0b1220]">{course.name}</div>
-                        <div className="mt-1 text-sm text-slate-500">{course.branch} • {course.numLectures} lectures</div>
-                      </div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#35506b]">Joined</div>
+                  {courses.length === 0 ? (
+                    <div className="rounded-2xl bg-[#edf2f7] px-4 py-4 text-sm text-slate-500">
+                      No joined courses yet. Enter a code to join your first class.
                     </div>
-                  ))}
+                  ) : (
+                    courses.map((course) => (
+                      <button
+                        key={course.id}
+                        type="button"
+                        onClick={() => router.push(`/course/${course.id}`)}
+                        className="w-full rounded-2xl bg-[#edf2f7] px-4 py-4 flex items-start justify-between gap-4 text-left hover:bg-[#e3ebf2] transition"
+                      >
+                        <div>
+                          <div className="font-semibold text-[#0b1220]">{course.name}</div>
+                          <div className="mt-1 text-sm text-slate-500">{course.branch} • {course.numLectures} lectures</div>
+                        </div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#35506b]">Open</div>
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
 

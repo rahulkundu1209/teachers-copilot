@@ -4,11 +4,13 @@ import { useCourses } from "../../../context/CourseContext";
 import { useEffect, useState } from "react";
 import Head from "next/head";
 import Breadcrumb from "../../../components/Breadcrumb";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function TopicPage() {
   const router = useRouter();
   const { id, topicId, google_connected } = router.query;
   const { getCourseById } = useCourses();
+  const { user, initialized } = useAuth();
   const course = getCourseById(id);
 
   const [slideUrl, setSlideUrl] = useState("");
@@ -101,37 +103,52 @@ export default function TopicPage() {
     }
   };
 
-  if (!course) return <Layout><div className="bg-white p-6 rounded shadow">Loading…</div></Layout>;
-  if (!topic) return <Layout><div className="bg-white p-6 rounded shadow">Topic not found</div></Layout>;
+  const isStudent = user?.role === "student";
 
-  return (
-    <Layout>
+  if (!course) {
+    const fallback = <div className="bg-white p-6 rounded shadow">Loading…</div>;
+    if (isStudent && initialized) {
+      return <div className="min-h-screen bg-slate-50 text-slate-900 p-6">{fallback}</div>;
+    }
+    return <Layout>{fallback}</Layout>;
+  }
+
+  if (!topic) {
+    const fallback = <div className="bg-white p-6 rounded shadow">Topic not found</div>;
+    if (isStudent && initialized) {
+      return <div className="min-h-screen bg-slate-50 text-slate-900 p-6">{fallback}</div>;
+    }
+    return <Layout>{fallback}</Layout>;
+  }
+
+  const content = (
+    <>
       <Head>
-  <title>{topic.title} | Teacher's Copilot</title>
-</Head>
-  <Breadcrumb
-    backHref={`/course/${course.id}`}
-    items={[
-      {
-        label: "My Courses",
-        href: "/my-courses",
-      },
-      {
-        label: course.name,
-        href: `/course/${course.id}`,
-      },
-      {
-        label: topic.title,
-      },
-    ]}
-  />
+        <title>{topic.title} | Teacher's Copilot</title>
+      </Head>
+      <Breadcrumb
+        backHref={`/course/${course.id}`}
+        items={[
+          {
+            label: "My Courses",
+            href: "/my-courses",
+          },
+          {
+            label: course.name,
+            href: `/course/${course.id}`,
+          },
+          {
+            label: topic.title,
+          },
+        ]}
+      />
 
-  <div className="mb-4">
-    <h2 className="text-xl font-bold">{topic.title}</h2>
-    <div className="text-sm text-slate-500">
-      Part of course: {course.name}
-    </div>
-  </div>
+      <div className="mb-4">
+        <h2 className="text-xl font-bold">{topic.title}</h2>
+        <div className="text-sm text-slate-500">
+          Part of course: {course.name}
+        </div>
+      </div>
 
 
       <div className="bg-white p-6 rounded shadow space-y-6">
@@ -170,6 +187,12 @@ export default function TopicPage() {
           <div className="text-sm text-slate-700">{topic.assignments || "Coming Soon..."}</div>
         </div>
       </div>
-    </Layout>
+    </>
+  );
+
+  return (
+    isStudent && initialized
+      ? <div className="min-h-screen bg-slate-50 text-slate-900 p-6">{content}</div>
+      : <Layout>{content}</Layout>
   );
 }

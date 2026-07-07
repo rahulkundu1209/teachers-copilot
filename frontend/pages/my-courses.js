@@ -12,6 +12,16 @@ export default function MyCourses() {
   const router = useRouter();
   const [deleting, setDeleting] = useState(null);
 
+  async function copyJoinCode(code) {
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      alert(`Course code ${code} copied`);
+    } catch (err) {
+      alert(`Could not copy code. Please copy it manually: ${code}`);
+    }
+  }
+
   useEffect(() => {
     if (initialized && !user) router.push("/");
   }, [initialized, user]);
@@ -66,6 +76,18 @@ export default function MyCourses() {
               <div>
                 <div className="font-semibold">{c.name}</div>
                 <div className="text-xs text-slate-500">{c.branch} • {c.numLectures} lectures</div>
+                {c.joinCode ? (
+                  <div className="mt-2 flex items-center gap-2 text-xs text-slate-600">
+                    <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold tracking-[0.2em]">{c.joinCode}</span>
+                    <button
+                      type="button"
+                      onClick={() => copyJoinCode(c.joinCode)}
+                      className="rounded-full bg-indigo-50 px-3 py-1 font-medium text-indigo-700 hover:bg-indigo-100 transition"
+                    >
+                      Copy code
+                    </button>
+                  </div>
+                ) : null}
               </div>
 
               <div className="flex gap-2">
