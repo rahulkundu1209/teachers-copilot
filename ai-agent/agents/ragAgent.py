@@ -46,8 +46,8 @@ def normalize_text_content(content: object) -> str:
 
 
 def ensure_api_key() -> None:
-    if not os.environ.get("GOOGLE_API_KEY"):
-        os.environ["GOOGLE_API_KEY"] = getpass.getpass("Enter your Google Gemini API key: ")
+    if not os.environ.get("GEMINI_API_KEY"):
+        os.environ["GEMINI_API_KEY"] = getpass.getpass("Enter your Google Gemini API key: ")
 
 
 def load_pdf_documents(pdf_dir: Path) -> list[Document]:
@@ -112,7 +112,7 @@ def build_rag_agent(pdf_dir: Path):
             "You are an academic retrieval assistant. Your sole task is to extract previous year questions (PYQs) "
             "from the provided context that match the user's requested topic.\n\n"
             "Strict Grounding Rules:\n"
-            "1. Extract ONLY questions directly mentioned in the provided context that match the topic.\n"
+            "1. Extract ONLY questions directly mentioned in the provided context that match the given topic of the given subject.\n"
             "2. If a question is relevant but missing specific details like marks or year in the text, set those fields to null.\n"
             "3. Do not invent, extrapolate, or assume any information outside of the provided context.\n"
             "4. If no questions match the requested topic, return an empty list."
@@ -182,5 +182,5 @@ def build_graph(pdf_dir: Path):
     return workflow.compile()
 
 
-DEFAULT_PDF_DIR = Path("pdfs")
+DEFAULT_PDF_DIR = Path("../pdfs")
 agent = build_graph(DEFAULT_PDF_DIR)
