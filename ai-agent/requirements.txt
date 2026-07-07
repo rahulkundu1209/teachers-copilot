@@ -1,2 +1,12 @@
--e ../../
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-groq
+deepagents
+pydantic
+python-dotenv
+langgraph>=0.1.0
 langgraph-cli[inmem]
+numpy==2.5.1
+langchain-google-genai==4.2.7
+langchain-text-splitters==1.1.2
+pypdf
