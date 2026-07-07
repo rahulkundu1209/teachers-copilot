@@ -1,14 +1,13 @@
-I have created the analyzer assistant, which will divide the topic as per the number of lectures and the given detailed syllabus.
-It is inside the analyze_syllabus folder. I can give it the syllaubs by an api call(details in postman), as of now the number of lectures planned is hard coded.
+Inside the root folder keep agents(folder), requirements.txt and .env
+1. agents(folder): All the ai-agent files(.py) and langgraph.json file
+2. .env and requirements.txt content as given.
 
-How to Run the Project
-1. Create and Activate the Virtual Environment
-> uv venv --python 3.11
-> uv sync
-> .venv\\Scripts\\activate
-2. Run the AI Agent
-Move to a agent directory and(ex- ./agents/analyze_syllabus)
-> uv pip install -r requirements.txt
+Create Virtual Environment(cmd) -
+> python -m venv venv
+Activate Virtual Environment(cmd) -
+> venv\Scripts\activate
+Install dependencies:
+> pip install -r requirements.txt
+Run the agents:
+Inside the agents folder, run -
 > langgraph dev
-
-The generate ppt agent will give error if google authentication is not done properly. It will try to use the ppt generator tool but as the authetication is not done it will not work and groq api call will be made again and again.
