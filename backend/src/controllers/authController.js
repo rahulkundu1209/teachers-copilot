@@ -6,8 +6,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev-jwt-secret";
 
 export async function register(req, res) {
   try {
-    const { name, email, password } = req.body || {};
-    const user = await createUser({ name, email, password });
+    const { name, email, password, role, department } = req.body || {};
+    const user = await createUser({ name, email, password, role, department });
     return res.status(201).json({ user });
   } catch (err) {
     return res.status(400).json({ error: err.message || "Register failed" });
@@ -17,12 +17,12 @@ export async function register(req, res) {
 // Registration Step 1: verify input, ensure user not exists, send OTP, and stash pending data
 export async function registerRequestOtp(req, res) {
   try {
-    const { name, email, password } = req.body || {};
+    const { name, email, password, role = "teacher", department = "" } = req.body || {};
     if (!email || !password) return res.status(400).json({ error: "Email and password required" });
     const existing = await getUserByEmail(email);
     if (existing) return res.status(400).json({ error: "User already exists" });
 
-    await createAndSendOtp({ email, purpose: "register", payload: { name, password } });
+    await createAndSendOtp({ email, purpose: "register", payload: { name, password, role, department } });
     return res.json({ ok: true });
   } catch (err) {
     return res.status(500).json({ error: err.message || "Could not send OTP" });
@@ -38,7 +38,13 @@ export async function registerVerifyOtp(req, res) {
     if (!result.ok) return res.status(401).json({ error: "Invalid or expired code" });
     const payload = result.payload || {};
 
-    const user = await createUser({ name: payload.name, email, password: payload.password });
+    const user = await createUser({
+      name: payload.name,
+      email,
+      password: payload.password,
+      role: payload.role,
+      department: payload.department,
+    });
     const token = jwt.sign({ email: user.email, name: user.name }, JWT_SECRET, { expiresIn: "7d" });
     return res.json({ user, token });
   } catch (err) {
@@ -73,7 +79,7 @@ export async function verifyOtpAndIssueToken(req, res) {
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const token = jwt.sign({ email: user.email, name: user.name }, JWT_SECRET, { expiresIn: "7d" });
-    return res.json({ user: { name: user.name, email: user.email }, token });
+    return res.json({ user: { name: user.name, email: user.email, role: user.role, department: user.department }, token });
   } catch (err) {
     return res.status(500).json({ error: err.message || "OTP verify failed" });
   }

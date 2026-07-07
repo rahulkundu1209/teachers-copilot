@@ -37,6 +37,7 @@ export default function DashboardPage() {
   // Keep existing guard but only run after initialization
   useEffect(() => {
     if (initialized && !user) router.push("/");
+    if (initialized && user?.role === "student") router.replace("/studdashboard");
   }, [initialized, user]);
 
   // Block back navigation on dashboard (only via physical back button)

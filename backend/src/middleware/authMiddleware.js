@@ -21,7 +21,7 @@ export default async function authMiddleware(req, res, next) {
     const existing = await User.findOne({ email });
     if (!existing) return res.status(401).json({ error: "User not found" });
 
-    req.user = { email: existing.email, name: existing.name };
+    req.user = { email: existing.email, name: existing.name, role: existing.role, department: existing.department };
     return next();
   } catch (err) {
     return res.status(401).json({ error: "Invalid or expired token" });

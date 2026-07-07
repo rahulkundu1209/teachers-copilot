@@ -9,8 +9,10 @@ export default function Register() {
   const router = useRouter();
   const { user, initialized, setUser } = useAuth();
 
+  const [accountType, setAccountType] = useState("teacher");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [department, setDepartment] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState("form"); // form -> otp
@@ -21,7 +23,7 @@ export default function Register() {
   // Redirect signed-in users away unless they are in the OTP step of registration
   useEffect(() => {
     if (initialized && user && step !== "otp") {
-      router.replace("/dashboard");
+      router.replace(user?.role === "student" ? "/studdashboard" : "/dashboard");
     }
   }, [user, initialized, router, step]);
 
@@ -42,6 +44,10 @@ export default function Register() {
       setError("Password is required");
       return;
     }
+    if (accountType === "student" && !department.trim()) {
+      setError("Department is required for student registration");
+      return;
+    }
 
     setError("");
     setLoading(true);
@@ -50,7 +56,13 @@ export default function Register() {
       const res = await fetch(`${API_BASE}/api/auth/register/request-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: fullName, email, password }),
+        body: JSON.stringify({
+          name: fullName,
+          email,
+          password,
+          role: accountType,
+          department: accountType === "student" ? department : "",
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Could not send OTP");
@@ -89,7 +101,7 @@ export default function Register() {
         console.warn("Could not save auth locally", err);
       }
       if (typeof setUser === "function") setUser(user);
-      router.push("/create-profile?from=register");
+      router.push(user?.role === "student" ? "/studdashboard" : "/create-profile?from=register");
     } catch (err) {
       console.error(err);
       setError(err.message || "Verification failed");
@@ -114,6 +126,40 @@ export default function Register() {
         <div className="space-y-6">
           {step === "form" && (
             <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAccountType("teacher");
+                    setStep("form");
+                    setError("");
+                  }}
+                  className={`h-12 rounded-lg border text-lg transition ${
+                    accountType === "teacher"
+                      ? "bg-[#0077B6] text-white border-[#0077B6]"
+                      : "bg-white text-[#0B1220] border-slate-300"
+                  }`}
+                >
+                  Register as a Teacher
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAccountType("student");
+                    setStep("form");
+                    setError("");
+                  }}
+                  className={`h-12 rounded-lg border text-lg transition ${
+                    accountType === "student"
+                      ? "bg-[#0077B6] text-white border-[#0077B6]"
+                      : "bg-white text-[#0B1220] border-slate-300"
+                  }`}
+                >
+                  Register as a Student
+                </button>
+              </div>
+
               <input
                 type="text"
                 value={fullName}
@@ -133,6 +179,18 @@ export default function Register() {
                 style={{ backgroundColor: "#909DAE", color: "#0B1220", border: "none" }}
                 autoComplete="email"
               />
+
+              {accountType === "student" && (
+                <input
+                  type="text"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  placeholder="Department"
+                  className="w-full h-14 rounded-lg px-4 text-lg"
+                  style={{ backgroundColor: "#909DAE", color: "#0B1220", border: "none" }}
+                  autoComplete="off"
+                />
+              )}
 
               <input
                 type="password"

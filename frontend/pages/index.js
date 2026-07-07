@@ -19,7 +19,7 @@ export default function Login() {
   // Redirect authenticated users to dashboard
   useEffect(() => {
     if (initialized && user) {
-      router.replace("/dashboard");
+      router.replace(user?.role === "student" ? "/studdashboard" : "/dashboard");
     }
   }, [user, initialized, router]);
   async function handleLogin(e) {
@@ -88,7 +88,7 @@ export default function Login() {
         console.warn("Could not save auth to localStorage", err);
       }
       if (typeof setUser === "function") setUser(user);
-      router.push("/dashboard");
+      router.push(user?.role === "student" ? "/studdashboard" : "/dashboard");
       return;
     } catch (err) {
       console.error(err);
