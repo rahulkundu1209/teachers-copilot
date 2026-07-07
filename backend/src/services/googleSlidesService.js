@@ -174,7 +174,7 @@ export async function createPresentationFromPayload(email, payload) {
     fields: "id,name,mimeType,webViewLink",
   });
 
-  console.log("Created presentation:", file.data);
+  // console.log("Created presentation:", file.data);
 
   return file.data.webViewLink || `https://docs.google.com/presentation/d/${presentationId}/edit`;
 }

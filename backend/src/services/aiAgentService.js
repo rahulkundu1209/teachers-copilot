@@ -28,7 +28,7 @@ export async function analyzeSyllabus(email, course) {
         message: {
           role: "user",
           parts: [{ kind: "text", text: JSON.stringify(prompt) }],
-          messageId: "msg-1",
+          messageId: "msg-2",
         },
         thread: { threadId: "" },
       },
@@ -63,7 +63,7 @@ export async function generatePPT(email, subject, description, threadId=""){
         message: {
           role: "user",
           parts: [{ kind: "text", text: JSON.stringify(prompt) }],
-          messageId: "msg-2",
+          messageId: "msg-3",
         },
         thread: { threadId: threadId },
       },
@@ -71,7 +71,7 @@ export async function generatePPT(email, subject, description, threadId=""){
   };
   try {
     const { data } = await axios.request(options);
-    console.log("generatePPT ai-agent response data:", data);
+    // console.log("generatePPT ai-agent response data:", data);
     if (data) {
       const text =
         data.result.artifacts?.[0]?.parts?.[0]?.text ||
@@ -96,3 +96,53 @@ export async function generatePPT(email, subject, description, threadId=""){
     throw error;
   }
 }
+
+//Write this function as generatePPT but for retrievePYQ. It should take subject, topic and threadId as parameters and return the response from the ai-agent. The prompt should be "Subject: ${subject}\nTopic: ${topic}". The assistant id should be RETRIEVEPYQ_ASSISTANT_ID. The messageId should be "msg-3". The response from the ai-agent will be a JSON string which needs to be parsed and returned.
+export async function retrievePYQ(subject, topic, threadId="") {
+  const AIAGENT_BASE_URL = process.env.AIAGENT_BASE_URL;
+  const RETRIEVEPYQ_ASSISTANT_ID = process.env.RETRIEVEPYQ_ASSISTANT_ID;
+  const prompt = `Subject: ${subject}\nTopic: ${topic}`;
+
+  const options = {
+    method: "POST",
+    url: `${AIAGENT_BASE_URL}a2a/${RETRIEVEPYQ_ASSISTANT_ID}`,
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    data: {
+      jsonrpc: "2.0",
+      id: "",
+      method: "message/send",
+      params: {
+        message: {
+          role: "user",
+          parts: [{ kind: "text", text: JSON.stringify(prompt) }],
+          messageId: "msg-4",
+        },
+        thread: { threadId },
+      },
+    },
+  };
+
+  try {
+    const { data } = await axios.request(options);
+    if (data) {
+      console.log("retrievePYQ ai-agent response data:", data);
+      const text =
+        data.result.artifacts?.[0]?.parts?.[0]?.text ||
+        data.result.history?.[1]?.parts?.[0]?.text ||
+        "";
+
+      if (!text) {
+        throw new Error("No payload returned from retrievePYQ agent");
+      }
+
+      try {
+        return JSON.parse(text);
+      } catch (error) {
+        throw new Error(`Invalid JSON payload from retrievePYQ agent: ${error.message}`);
+      }
+    }
+  } catch (error) {
+    console.error("retrievePYQ error:", error);
+    throw error;
+  }
+};
