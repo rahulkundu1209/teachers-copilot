@@ -3,7 +3,8 @@
   "graphs": {
     "analyzeSyllabus": "./analyzer.py:agent",
     "parseSyllabus": "./syllabusParser.py:agent",
-    "generatePPT": "./pptGenerator.py:agent"
+    "generatePPT": "./pptGenerator.py:agent",
+    "retrievePYQ": "./ragAgent.py:agent"
   },
   "env": "../.env"
 }
