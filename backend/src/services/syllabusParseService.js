@@ -35,7 +35,7 @@ export async function parseSyllabusFile(subjectName, filePath, threadId = "") {
         message: {
           role: "user",
           parts: [{ kind: "text", text: JSON.stringify(prompt) }],
-          messageId: "",
+          messageId: "msg-3",
         },
         thread: { threadId: threadId },
       },

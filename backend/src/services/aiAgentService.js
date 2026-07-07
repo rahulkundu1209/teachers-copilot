@@ -28,7 +28,7 @@ export async function analyzeSyllabus(email, course) {
         message: {
           role: "user",
           parts: [{ kind: "text", text: JSON.stringify(prompt) }],
-          messageId: "",
+          messageId: "msg-1",
         },
         thread: { threadId: "" },
       },
@@ -63,7 +63,7 @@ export async function generatePPT(email, subject, description, threadId=""){
         message: {
           role: "user",
           parts: [{ kind: "text", text: JSON.stringify(prompt) }],
-          messageId: "",
+          messageId: "msg-2",
         },
         thread: { threadId: threadId },
       },
