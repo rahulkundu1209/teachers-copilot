@@ -22,6 +22,10 @@ export default function TopicPage() {
   const [assessmentsData, setAssessmentsData] = useState(null);
   const [loadingAssessments, setLoadingAssessments] = useState(false);
   const [assessmentsError, setAssessmentsError] = useState("");
+  const [assessmentModalOpen, setAssessmentModalOpen] = useState(false);
+  const [selectedAssessmentAnswers, setSelectedAssessmentAnswers] = useState({});
+  const [assessmentSubmitted, setAssessmentSubmitted] = useState(false);
+  const [assessmentResult, setAssessmentResult] = useState(null);
 
   const topic = (course?.topics || []).find((t) => String(t.id) === String(topicId));
 
@@ -270,10 +274,91 @@ export default function TopicPage() {
     }
   }, [topic]);
 
+  useEffect(() => {
+    if (!assessmentModalOpen) return;
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setAssessmentModalOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [assessmentModalOpen]);
+
+  useEffect(() => {
+    if (!assessmentModalOpen) {
+      setAssessmentSubmitted(false);
+    }
+  }, [assessmentModalOpen]);
+
   const isStudent = user?.role === "student";
   const backHref = course?.id ? `/course/${course.id}` : "/my-courses";
   const rootHref = isStudent ? "/studdashboard" : "/my-courses";
   const rootLabel = isStudent ? "Student Dashboard" : "My Courses";
+
+  const openAssessmentModal = () => {
+    setSelectedAssessmentAnswers({});
+    setAssessmentSubmitted(false);
+    setAssessmentResult(null);
+    setAssessmentModalOpen(true);
+  };
+
+  const closeAssessmentModal = () => {
+    setAssessmentModalOpen(false);
+  };
+
+  const handleChoiceSelect = (questionIndex, choice) => {
+    setSelectedAssessmentAnswers((current) => ({
+      ...current,
+      [questionIndex]: choice,
+    }));
+  };
+
+  const handleAssessmentSubmit = async () => {
+    if (!course || !topic || assessmentQuestions.length === 0) return;
+
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const token = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
+      const responses = assessmentQuestions.reduce((accumulator, question, index) => {
+        const key = String(question.id ?? index);
+        if (selectedAssessmentAnswers[index] !== undefined) {
+          accumulator[key] = selectedAssessmentAnswers[index];
+        }
+        return accumulator;
+      }, {});
+
+      const res = await fetch(`${API_BASE}/api/assessments/submit`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          courseId: course.id,
+          topicId,
+          responses,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to submit assessment");
+      }
+
+      setAssessmentSubmitted(true);
+      setAssessmentResult(data);
+    } catch (err) {
+      setAssessmentSubmitted(true);
+      setAssessmentResult({ error: err.message || "Failed to submit assessment" });
+    }
+  };
+
+  const assessmentQuestions = Array.isArray(assessmentsData) ? assessmentsData : [];
 
   if (!course) {
     const fallback = <div className="bg-white p-6 rounded shadow">Loading…</div>;
@@ -376,40 +461,142 @@ export default function TopicPage() {
         <div>
           <h3 className="font-semibold mb-2">Assessments</h3>
           <div className="text-sm text-slate-700">
-            {assessmentsData === null && (
-              <button
-                className="bg-slate-700 text-white px-3 py-1 rounded"
-                onClick={fetchAssessments}
-                disabled={loadingAssessments}
-              >
-                {loadingAssessments ? "Generating assessments…" : "Generate Assessments"}
-              </button>
-            )}
-            {assessmentsError ? <div className="text-red-600 mt-2">{assessmentsError}</div> : null}
-            {assessmentsData !== null ? (
-              <div className="mt-3 space-y-3">
-                {Array.isArray(assessmentsData) && assessmentsData.length > 0 ? (
-                  assessmentsData.map((q, idx) => (
-                    <div key={q.id || idx} className="rounded border border-slate-200 bg-white p-3">
-                      <div className="font-medium">Q{idx + 1} {q.type ? `(${q.type.toUpperCase()})` : ""}</div>
-                      <div className="mt-1">{q.question_text || JSON.stringify(q)}</div>
-                      {q.type === "mcq" && Array.isArray(q.choices) && (
-                        <ul className="mt-2 list-disc list-inside text-sm text-slate-700">
-                          {q.choices.map((c, ci) => (
-                            <li key={ci}>{c}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-slate-600">No assessments available for this topic.</div>
+            {isStudent ? (
+              assessmentsData !== null && assessmentQuestions.length > 0 ? (
+                <button
+                  className="rounded bg-indigo-600 px-3 py-1 text-white"
+                  onClick={openAssessmentModal}
+                >
+                  Take Assessment
+                </button>
+              ) : (
+                <div className="text-slate-600">Assessment will appear here once your teacher generates it.</div>
+              )
+            ) : (
+              <>
+                {assessmentsData === null && (
+                  <button
+                    className="rounded bg-slate-700 px-3 py-1 text-white"
+                    onClick={fetchAssessments}
+                    disabled={loadingAssessments}
+                  >
+                    {loadingAssessments ? "Generating assessments…" : "Generate Assessments"}
+                  </button>
                 )}
-              </div>
-            ) : null}
+                {assessmentsError ? <div className="mt-2 text-red-600">{assessmentsError}</div> : null}
+                {assessmentsData !== null ? (
+                  <div className="mt-3 space-y-3">
+                    {Array.isArray(assessmentsData) && assessmentsData.length > 0 ? (
+                      assessmentsData.map((q, idx) => (
+                        <div key={q.id || idx} className="rounded border border-slate-200 bg-white p-3">
+                          <div className="font-medium">Q{idx + 1} {q.type ? `(${q.type.toUpperCase()})` : ""}</div>
+                          <div className="mt-1">{q.question_text || JSON.stringify(q)}</div>
+                          {q.type === "mcq" && Array.isArray(q.choices) && (
+                            <ul className="mt-2 list-disc list-inside text-sm text-slate-700">
+                              {q.choices.map((c, ci) => (
+                                <li key={ci}>{c}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-slate-600">No assessments available for this topic.</div>
+                    )}
+                  </div>
+                ) : null}
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {isStudent && assessmentModalOpen && assessmentQuestions.length > 0 && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4 py-6"
+          onClick={closeAssessmentModal}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Take Assessment</h3>
+                <p className="text-sm text-slate-500">Answer the questions and submit when you are done.</p>
+              </div>
+              <button
+                type="button"
+                className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-200"
+                onClick={closeAssessmentModal}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="max-h-[calc(90vh-140px)] overflow-y-auto px-6 py-5">
+              <div className="space-y-4">
+                {assessmentQuestions.map((question, questionIndex) => (
+                  <div key={question.id || questionIndex} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="mb-3 text-sm font-semibold text-slate-900">
+                      Q{questionIndex + 1}. {question.question_text || question.title || "Question"}
+                    </div>
+                    {Array.isArray(question.choices) && question.choices.length > 0 ? (
+                      <div className="space-y-2">
+                        {question.choices.map((choice, choiceIndex) => {
+                          const isSelected = selectedAssessmentAnswers[questionIndex] === choice;
+                          return (
+                            <button
+                              key={choiceIndex}
+                              type="button"
+                              className={`w-full rounded-lg border px-4 py-3 text-left text-sm transition ${
+                                isSelected
+                                  ? "border-indigo-600 bg-indigo-50 text-indigo-900"
+                                  : "border-slate-200 bg-white text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/50"
+                              }`}
+                              onClick={() => handleChoiceSelect(questionIndex, choice)}
+                            >
+                              {choice}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-slate-600">No options available for this question.</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {assessmentSubmitted || assessmentResult?.error ? (
+                <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                  {assessmentResult?.error ? (
+                    <div className="text-red-700">{assessmentResult.error}</div>
+                  ) : (
+                    <div>
+                      Your assessment has been submitted. Score: {assessmentResult?.score ?? 0}/{assessmentResult?.maxScore ?? 0}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
+              <div className="text-sm text-slate-500">
+                {Object.keys(selectedAssessmentAnswers).length} of {assessmentQuestions.length} answered
+              </div>
+              <button
+                type="button"
+                className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+                onClick={handleAssessmentSubmit}
+                disabled={assessmentQuestions.length === 0}
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 

@@ -8,6 +8,72 @@ function normalizeEmail(email) {
   return (email || "").toLowerCase();
 }
 
+function sanitizeAssessmentForStudent(question) {
+  if (!question || typeof question !== "object") {
+    return question;
+  }
+
+  const sanitized = { ...question };
+  delete sanitized.answer;
+  return sanitized;
+}
+
+function normalizeStudentEmail(email) {
+  return (email || "").toLowerCase();
+}
+
+function getLatestSubmissionForStudent(topic, email) {
+  const normalizedEmail = normalizeStudentEmail(email);
+  const submissions = Array.isArray(topic?.assessmentSubmissions) ? topic.assessmentSubmissions : [];
+
+  return submissions
+    .filter((submission) => normalizeStudentEmail(submission?.userId) === normalizedEmail)
+    .sort((left, right) => new Date(right?.submittedAt || 0) - new Date(left?.submittedAt || 0))[0] || null;
+}
+
+function sanitizeTopicForStudent(topic, email) {
+  if (!topic || typeof topic !== "object") {
+    return topic;
+  }
+
+  const sanitized = { ...topic };
+  if (Array.isArray(sanitized.assessments)) {
+    sanitized.assessments = sanitized.assessments.map(sanitizeAssessmentForStudent);
+  }
+
+  const submission = getLatestSubmissionForStudent(topic, email);
+  if (submission) {
+    sanitized.assessmentMeta = {
+      hasSubmitted: true,
+      score: submission.score,
+      maxScore: submission.maxScore,
+      submittedAt: submission.submittedAt,
+    };
+  } else {
+    sanitized.assessmentMeta = {
+      hasSubmitted: false,
+      score: null,
+      maxScore: null,
+      submittedAt: null,
+    };
+  }
+
+  delete sanitized.assessmentSubmissions;
+
+  return sanitized;
+}
+
+function sanitizeCourseForStudent(course, email) {
+  if (!course || typeof course !== "object") {
+    return course;
+  }
+
+  return {
+    ...course,
+    topics: Array.isArray(course.topics) ? course.topics.map((topic) => sanitizeTopicForStudent(topic, email)) : course.topics,
+  };
+}
+
 function generateJoinCode(length = 6) {
   const bytes = crypto.randomBytes(length);
   let code = "";
@@ -73,7 +139,10 @@ export async function listCourses(userOrEmail) {
     }
   }
 
-  return courses.map((course) => toCoursePayload(course, { includeJoinCode: role !== "student" && course.userId === email }));
+  return courses.map((course) => {
+    const payload = toCoursePayload(course, { includeJoinCode: role !== "student" && course.userId === email });
+    return role === "student" ? sanitizeCourseForStudent(payload, email) : payload;
+  });
 }
 
 export async function createCourse(email, course) {
@@ -141,6 +210,11 @@ export async function getCourse(email, id) {
   }
 
   return toCoursePayload(course, { includeJoinCode: course.userId === normalizedEmail });
+}
+
+export async function getCourseForStudent(email, id) {
+  const course = await getCourse(email, id);
+  return sanitizeCourseForStudent(course, email);
 }
 
 export async function joinCourseByCode(email, code) {

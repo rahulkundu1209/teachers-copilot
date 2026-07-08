@@ -28,7 +28,9 @@ export async function getOne(req, res) {
     const user = req.user;
     const email = user && user.email;
     const id = req.params.id;
-    const c = await courseService.getCourse(email, id);
+    const c = user && user.role === "student"
+      ? await courseService.getCourseForStudent(email, id)
+      : await courseService.getCourse(email, id);
     if (!c) return res.status(404).json({ error: "Not found" });
     return res.json(c);
   } catch (err) {

@@ -11,6 +11,7 @@ const TopicSchema = new mongoose.Schema({
   pptLink: {type: String, default: ""},
   pyqData: { type: mongoose.Schema.Types.Mixed, default: [] },
   assessments: { type: mongoose.Schema.Types.Mixed, default: [] },
+  assessmentSubmissions: { type: mongoose.Schema.Types.Mixed, default: [] },
 }, { _id: false });
 
 const CourseSchema = new mongoose.Schema({
