@@ -19,6 +19,9 @@ export default function TopicPage() {
   const [pyqData, setPyqData] = useState(null);
   const [loadingPyq, setLoadingPyq] = useState(false);
   const [pyqError, setPyqError] = useState("");
+  const [assessmentsData, setAssessmentsData] = useState(null);
+  const [loadingAssessments, setLoadingAssessments] = useState(false);
+  const [assessmentsError, setAssessmentsError] = useState("");
 
   const topic = (course?.topics || []).find((t) => String(t.id) === String(topicId));
 
@@ -31,6 +34,11 @@ export default function TopicPage() {
       setPyqData(topic.pyqData);
     } else {
       setPyqData(null);
+    }
+    if (topic.assessments && topic.assessments.length) {
+      setAssessmentsData(topic.assessments);
+    } else {
+      setAssessmentsData(null);
     }
   }, [topic]);
 
@@ -152,6 +160,51 @@ export default function TopicPage() {
       setPyqError(err.message || "Failed to fetch PYQs");
     } finally {
       setLoadingPyq(false);
+    }
+  };
+
+  const fetchAssessments = async () => {
+    if (!topic || !course) return;
+
+    if (topic.assessments && topic.assessments.length) {
+      setAssessmentsData(topic.assessments);
+      return;
+    }
+
+    setLoadingAssessments(true);
+    setAssessmentsError("");
+    setAssessmentsData(null);
+
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const token = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
+      const res = await fetch(`${API_BASE}/api/select/assessments`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          topicId,
+          courseId: id,
+          subject: course.name || "General",
+          topic: topic.title || topic.content || "Topic",
+          description: topic.content || "",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch assessments");
+      }
+
+      setAssessmentsData(data.assessments ?? data);
+    } catch (err) {
+      setAssessmentsError(err.message || "Failed to fetch assessments");
+    } finally {
+      setLoadingAssessments(false);
     }
   };
 
@@ -322,7 +375,39 @@ export default function TopicPage() {
 
         <div>
           <h3 className="font-semibold mb-2">Assessments</h3>
-          <div className="text-sm text-slate-700">{topic.assignments || "Coming Soon..."}</div>
+          <div className="text-sm text-slate-700">
+            {assessmentsData === null && (
+              <button
+                className="bg-slate-700 text-white px-3 py-1 rounded"
+                onClick={fetchAssessments}
+                disabled={loadingAssessments}
+              >
+                {loadingAssessments ? "Generating assessments…" : "Generate Assessments"}
+              </button>
+            )}
+            {assessmentsError ? <div className="text-red-600 mt-2">{assessmentsError}</div> : null}
+            {assessmentsData !== null ? (
+              <div className="mt-3 space-y-3">
+                {Array.isArray(assessmentsData) && assessmentsData.length > 0 ? (
+                  assessmentsData.map((q, idx) => (
+                    <div key={q.id || idx} className="rounded border border-slate-200 bg-white p-3">
+                      <div className="font-medium">Q{idx + 1} {q.type ? `(${q.type.toUpperCase()})` : ""}</div>
+                      <div className="mt-1">{q.question_text || JSON.stringify(q)}</div>
+                      {q.type === "mcq" && Array.isArray(q.choices) && (
+                        <ul className="mt-2 list-disc list-inside text-sm text-slate-700">
+                          {q.choices.map((c, ci) => (
+                            <li key={ci}>{c}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-slate-600">No assessments available for this topic.</div>
+                )}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
     </>
