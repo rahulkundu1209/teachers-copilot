@@ -128,6 +128,16 @@ export async function createPresentationFromPayload(email, payload) {
   });
 
   const presentationId = presentation.data.presentationId;
+
+  await driveService.permissions.create({
+    fileId: presentationId,
+    requestBody: {
+      type: "anyone",
+      role: "reader",
+    },
+    fields: "id",
+  });
+
   const initialSlides = presentation.data.slides || [];
   const firstSlideId = initialSlides[0]?.objectId;
 
