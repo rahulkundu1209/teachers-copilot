@@ -18,59 +18,48 @@ function sanitizeAssessmentForStudent(question) {
   return sanitized;
 }
 
-function normalizeStudentEmail(email) {
-  return (email || "").toLowerCase();
-}
+// function sanitizeTopicForStudent(topic) {
+//   if (!topic || typeof topic !== "object") {
+//     return topic;
+//   }
 
-function getLatestSubmissionForStudent(topic, email) {
-  const normalizedEmail = normalizeStudentEmail(email);
-  const submissions = Array.isArray(topic?.assessmentSubmissions) ? topic.assessmentSubmissions : [];
+//   const sanitized = { ...topic };
+//   if (Array.isArray(sanitized.assessments)) {
+//     sanitized.assessments = sanitized.assessments.map(sanitizeAssessmentForStudent);
+//   }
 
-  return submissions
-    .filter((submission) => normalizeStudentEmail(submission?.userId) === normalizedEmail)
-    .sort((left, right) => new Date(right?.submittedAt || 0) - new Date(left?.submittedAt || 0))[0] || null;
-}
+//   return sanitized;
+// }
 
-function sanitizeTopicForStudent(topic, email) {
+function sanitizeTopicForStudent(topic) {
   if (!topic || typeof topic !== "object") {
     return topic;
   }
 
-  const sanitized = { ...topic };
+  // Convert Mongoose subdocument into a normal object
+  const sanitized =
+    typeof topic.toObject === "function"
+      ? topic.toObject()
+      : { ...topic };
+
   if (Array.isArray(sanitized.assessments)) {
-    sanitized.assessments = sanitized.assessments.map(sanitizeAssessmentForStudent);
+    sanitized.assessments = sanitized.assessments.map(
+      sanitizeAssessmentForStudent
+    );
   }
-
-  const submission = getLatestSubmissionForStudent(topic, email);
-  if (submission) {
-    sanitized.assessmentMeta = {
-      hasSubmitted: true,
-      score: submission.score,
-      maxScore: submission.maxScore,
-      submittedAt: submission.submittedAt,
-    };
-  } else {
-    sanitized.assessmentMeta = {
-      hasSubmitted: false,
-      score: null,
-      maxScore: null,
-      submittedAt: null,
-    };
-  }
-
-  delete sanitized.assessmentSubmissions;
 
   return sanitized;
 }
 
-function sanitizeCourseForStudent(course, email) {
+
+function sanitizeCourseForStudent(course) {
   if (!course || typeof course !== "object") {
     return course;
   }
 
   return {
     ...course,
-    topics: Array.isArray(course.topics) ? course.topics.map((topic) => sanitizeTopicForStudent(topic, email)) : course.topics,
+    topics: Array.isArray(course.topics) ? course.topics.map(sanitizeTopicForStudent) : course.topics,
   };
 }
 
@@ -141,7 +130,7 @@ export async function listCourses(userOrEmail) {
 
   return courses.map((course) => {
     const payload = toCoursePayload(course, { includeJoinCode: role !== "student" && course.userId === email });
-    return role === "student" ? sanitizeCourseForStudent(payload, email) : payload;
+    return role === "student" ? sanitizeCourseForStudent(payload) : payload;
   });
 }
 
@@ -214,7 +203,7 @@ export async function getCourse(email, id) {
 
 export async function getCourseForStudent(email, id) {
   const course = await getCourse(email, id);
-  return sanitizeCourseForStudent(course, email);
+  return sanitizeCourseForStudent(course);
 }
 
 export async function joinCourseByCode(email, code) {
