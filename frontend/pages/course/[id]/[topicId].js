@@ -575,13 +575,25 @@ const [checkingAssessmentStatus, setCheckingAssessmentStatus] =
             ) : (
               <>
 
-              <button
+              {/* <button
+      type="button"
+      className="mb-3 rounded bg-indigo-600 px-3 py-1 text-white"
+      onClick={openSubmissionsModal}
+    >
+      Submitted Assessments
+    </button> */}
+
+
+    {assessmentsData !== null &&
+  assessmentQuestions.length > 0 && (
+    <button
       type="button"
       className="mb-3 rounded bg-indigo-600 px-3 py-1 text-white"
       onClick={openSubmissionsModal}
     >
       Submitted Assessments
     </button>
+  )}
                 {assessmentsData === null && (
                   <button
                     className="rounded bg-slate-700 px-3 py-1 text-white"

@@ -112,23 +112,49 @@ export async function submitAssessment(req, res) {
      * The topic must not already contain a submission from this student.
      * This protects against refreshes, repeated clicks, and concurrent requests.
      */
+    // const updateResult = await Course.updateOne(
+    //   {
+    //     _id: courseId,
+    //     joinedStudentEmails: email,
+    //     topics: {
+    //       $elemMatch: {
+    //         id: String(topicId),
+    //         "assessmentSubmissions.userId": { $ne: email },
+    //       },
+    //     },
+    //   },
+    //   {
+    //     $push: {
+    //       "topics.$.assessmentSubmissions": submission,
+    //     },
+    //   }
+    // );
+
     const updateResult = await Course.updateOne(
-      {
-        _id: courseId,
-        joinedStudentEmails: email,
-        topics: {
-          $elemMatch: {
-            id: String(topicId),
-            "assessmentSubmissions.userId": { $ne: email },
-          },
-        },
+  {
+    _id: courseId,
+    joinedStudentEmails: email,
+    topics: {
+      $elemMatch: {
+        id: String(topicId),
+        "assessmentSubmissions.userId": { $ne: email },
       },
+    },
+  },
+  {
+    $push: {
+      "topics.$[targetTopic].assessmentSubmissions": submission,
+    },
+  },
+  {
+    arrayFilters: [
       {
-        $push: {
-          "topics.$.assessmentSubmissions": submission,
-        },
-      }
-    );
+        "targetTopic.id": String(topicId),
+      },
+    ],
+  }
+);
+
 
     if (updateResult.modifiedCount === 0) {
       return res.status(409).json({
@@ -202,6 +228,17 @@ export async function getAssessmentSubmissions(req, res) {
     if (!topic) {
       return res.status(404).json({ error: "Topic not found" });
     }
+
+    if (
+  !Array.isArray(topic.assessments) ||
+  topic.assessments.length === 0
+) {
+  return res.json({
+    submissions: [],
+    count: 0,
+    assessmentGenerated: false,
+  });
+}
 
     const submissions = Array.isArray(topic.assessmentSubmissions)
       ? topic.assessmentSubmissions
