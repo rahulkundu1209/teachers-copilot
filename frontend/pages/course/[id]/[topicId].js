@@ -26,6 +26,15 @@ export default function TopicPage() {
   const [selectedAssessmentAnswers, setSelectedAssessmentAnswers] = useState({});
   const [assessmentSubmitted, setAssessmentSubmitted] = useState(false);
   const [assessmentResult, setAssessmentResult] = useState(null);
+  const [submissionsModalOpen, setSubmissionsModalOpen] = useState(false);
+  const [assessmentSubmissions, setAssessmentSubmissions] = useState([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+  const [submissionsError, setSubmissionsError] = useState("");
+
+  const [hasSubmittedAssessment, setHasSubmittedAssessment] =
+  useState(false);
+const [checkingAssessmentStatus, setCheckingAssessmentStatus] =
+  useState(false);
 
   const topic = (course?.topics || []).find((t) => String(t.id) === String(topicId));
 
@@ -298,6 +307,41 @@ export default function TopicPage() {
   const rootHref = isStudent ? "/studdashboard" : "/my-courses";
   const rootLabel = isStudent ? "Student Dashboard" : "My Courses";
 
+  useEffect(() => {
+  if (!isStudent || !course?.id || !topic?.id) return;
+
+  async function checkAssessmentStatus() {
+    setCheckingAssessmentStatus(true);
+
+    try {
+      const API_BASE =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const token = localStorage.getItem("tc_token");
+
+      const res = await fetch(
+        `${API_BASE}/api/assessments/${course.id}/${topic.id}/status`,
+        {
+          headers: token
+            ? { Authorization: `Bearer ${token}` }
+            : {},
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setHasSubmittedAssessment(Boolean(data.hasSubmitted));
+      }
+    } catch (err) {
+      console.error("Could not check assessment status", err);
+    } finally {
+      setCheckingAssessmentStatus(false);
+    }
+  }
+
+  checkAssessmentStatus();
+}, [isStudent, course?.id, topic?.id]);
+
   const openAssessmentModal = () => {
     setSelectedAssessmentAnswers({});
     setAssessmentSubmitted(false);
@@ -351,12 +395,60 @@ export default function TopicPage() {
       }
 
       setAssessmentSubmitted(true);
+      setHasSubmittedAssessment(true);
       setAssessmentResult(data);
     } catch (err) {
       setAssessmentSubmitted(true);
       setAssessmentResult({ error: err.message || "Failed to submit assessment" });
     }
   };
+
+  const openSubmissionsModal = async () => {
+  if (!course || !topic) return;
+
+  setSubmissionsModalOpen(true);
+  setLoadingSubmissions(true);
+  setSubmissionsError("");
+  setAssessmentSubmissions([]);
+
+  try {
+    const API_BASE =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("tc_token")
+        : null;
+
+    const res = await fetch(
+      `${API_BASE}/api/assessments/${course.id}/${topic.id}/submissions`,
+      {
+        headers: token
+          ? { Authorization: `Bearer ${token}` }
+          : {},
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data.error || "Failed to load submissions"
+      );
+    }
+
+    setAssessmentSubmissions(
+      Array.isArray(data.submissions) ? data.submissions : []
+    );
+  } catch (err) {
+    setSubmissionsError(
+      err.message || "Failed to load submissions"
+    );
+  } finally {
+    setLoadingSubmissions(false);
+  }
+};
+
 
   const assessmentQuestions = Array.isArray(assessmentsData) ? assessmentsData : [];
 
@@ -464,16 +556,32 @@ export default function TopicPage() {
             {isStudent ? (
               assessmentsData !== null && assessmentQuestions.length > 0 ? (
                 <button
-                  className="rounded bg-indigo-600 px-3 py-1 text-white"
-                  onClick={openAssessmentModal}
-                >
-                  Take Assessment
-                </button>
+      type="button"
+      className="rounded bg-indigo-600 px-3 py-1 text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+      onClick={openAssessmentModal}
+      disabled={
+        checkingAssessmentStatus || hasSubmittedAssessment
+      }
+    >
+      {checkingAssessmentStatus
+        ? "Checking..."
+        : hasSubmittedAssessment
+          ? "Assessment Submitted"
+          : "Take Assessment"}
+    </button>
               ) : (
                 <div className="text-slate-600">Assessment will appear here once your teacher generates it.</div>
               )
             ) : (
               <>
+
+              <button
+      type="button"
+      className="mb-3 rounded bg-indigo-600 px-3 py-1 text-white"
+      onClick={openSubmissionsModal}
+    >
+      Submitted Assessments
+    </button>
                 {assessmentsData === null && (
                   <button
                     className="rounded bg-slate-700 px-3 py-1 text-white"
@@ -589,7 +697,7 @@ export default function TopicPage() {
                 type="button"
                 className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-400"
                 onClick={handleAssessmentSubmit}
-                disabled={assessmentQuestions.length === 0}
+                disabled={assessmentQuestions.length === 0 || assessmentSubmitted}
               >
                 Submit
               </button>
@@ -597,6 +705,93 @@ export default function TopicPage() {
           </div>
         </div>
       )}
+
+
+      {!isStudent && submissionsModalOpen && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4 py-6"
+    onClick={() => setSubmissionsModalOpen(false)}
+  >
+    <div
+      className="max-h-[85vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="flex items-center justify-between border-b px-6 py-4">
+        <div>
+          <h3 className="text-lg font-semibold">
+            Submitted Assessments
+          </h3>
+          <p className="text-sm text-slate-500">
+            {topic.title}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="rounded bg-slate-100 px-3 py-1"
+          onClick={() => setSubmissionsModalOpen(false)}
+        >
+          Close
+        </button>
+      </div>
+
+      <div className="max-h-[65vh] overflow-y-auto p-6">
+        {loadingSubmissions ? (
+          <div className="text-slate-500">
+            Loading submissions...
+          </div>
+        ) : submissionsError ? (
+          <div className="text-red-600">
+            {submissionsError}
+          </div>
+        ) : assessmentSubmissions.length === 0 ? (
+          <div className="rounded-lg bg-slate-50 p-4 text-slate-500">
+            No student has attempted this assessment yet.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b bg-slate-50">
+                  <th className="p-3">Student</th>
+                  <th className="p-3">Email</th>
+                  <th className="p-3">Score</th>
+                  <th className="p-3">Submitted</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {assessmentSubmissions.map((submission) => (
+                  <tr
+                    key={submission.id}
+                    className="border-b"
+                  >
+                    <td className="p-3 font-medium">
+                      {submission.studentName}
+                    </td>
+                    <td className="p-3">
+                      {submission.studentEmail}
+                    </td>
+                    <td className="p-3 font-semibold">
+                      {submission.score}/{submission.maxScore}
+                    </td>
+                    <td className="p-3">
+                      {submission.submittedAt
+                        ? new Date(
+                            submission.submittedAt
+                          ).toLocaleString()
+                        : "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)}
     </>
   );
 

@@ -48,6 +48,8 @@ function sanitizeTopicForStudent(topic) {
     );
   }
 
+  delete sanitized.assessmentSubmissions;
+
   return sanitized;
 }
 
