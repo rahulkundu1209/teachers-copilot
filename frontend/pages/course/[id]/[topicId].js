@@ -16,6 +16,9 @@ export default function TopicPage() {
   const [slideUrl, setSlideUrl] = useState("");
   const [loadingSlides, setLoadingSlides] = useState(false);
   const [slideError, setSlideError] = useState("");
+  const [pyqData, setPyqData] = useState(null);
+  const [loadingPyq, setLoadingPyq] = useState(false);
+  const [pyqError, setPyqError] = useState("");
 
   const topic = (course?.topics || []).find((t) => String(t.id) === String(topicId));
 
@@ -23,6 +26,11 @@ export default function TopicPage() {
     if (!topic) return;
     if (topic.pptLink) {
       setSlideUrl(topic.pptLink);
+    }
+    if (topic.pyqData && topic.pyqData.length) {
+      setPyqData(topic.pyqData);
+    } else {
+      setPyqData(null);
     }
   }, [topic]);
 
@@ -103,8 +111,114 @@ export default function TopicPage() {
     }
   };
 
+  const fetchPYQs = async () => {
+    if (!topic || !course) return;
+
+    if (topic.pyqData && topic.pyqData.length) {
+      setPyqData(topic.pyqData);
+      return;
+    }
+
+    setLoadingPyq(true);
+    setPyqError("");
+    setPyqData(null);
+
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const token = typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
+      const res = await fetch(`${API_BASE}/api/select/pyq`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          topicId,
+          courseId: id,
+          subject: course.name || "General",
+          topic: topic.title || topic.content || "Topic",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch PYQs");
+      }
+
+      setPyqData(data.pyqs ?? data);
+    } catch (err) {
+      setPyqError(err.message || "Failed to fetch PYQs");
+    } finally {
+      setLoadingPyq(false);
+    }
+  };
+
+  const renderPyqContent = (payload) => {
+    if (Array.isArray(payload)) {
+      if (payload.length === 0) {
+        return <div className="text-slate-600">No PYQ for this Topic</div>;
+      }
+      return payload.map((item, index) => {
+        if (typeof item === "string") {
+          return (
+            <div key={index} className="mb-3 rounded border border-slate-200 bg-white p-3">
+              {item}
+            </div>
+          );
+        }
+        if (typeof item === "object" && item !== null) {
+          return (
+            <div key={index} className="mb-3 rounded border border-slate-200 bg-white p-3">
+              <div className="text-sm">
+                {item.question_text && (
+                  <div className="mb-2 font-medium">{item.question_text}</div>
+                )}
+                <div className="text-xs text-slate-600 space-y-1">
+                  {item.marks && <div>Marks: {item.marks}</div>}
+                  {item.year && <div>Year: {item.year}</div>}
+                </div>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div key={index} className="mb-3 rounded border border-slate-200 bg-white p-3 text-xs">
+            {String(item)}
+          </div>
+        );
+      });
+    }
+
+    if (payload && typeof payload === "object") {
+      if (payload.question_text) {
+        return (
+          <div className="rounded border border-slate-200 bg-white p-3">
+            <div className="text-sm">
+              <div className="mb-2 font-medium">{payload.question_text}</div>
+              <div className="text-xs text-slate-600 space-y-1">
+                {payload.marks && <div>Marks: {payload.marks}</div>}
+                {payload.year && <div>Year: {payload.year}</div>}
+              </div>
+            </div>
+          </div>
+        );
+      }
+      return <pre className="whitespace-pre-wrap text-xs">{JSON.stringify(payload, null, 2)}</pre>;
+    }
+
+    return <div className="text-slate-600">No PYQ for this Topic</div>;
+  };
+
+  useEffect(() => {
+    if (topic && !topic.pyqData) {
+      fetchPYQs();
+    }
+  }, [topic]);
+
   const isStudent = user?.role === "student";
-  const backHref = `/course/${course.id}`;
+  const backHref = course?.id ? `/course/${course.id}` : "/my-courses";
   const rootHref = isStudent ? "/studdashboard" : "/my-courses";
   const rootLabel = isStudent ? "Student Dashboard" : "My Courses";
 
@@ -177,6 +291,27 @@ export default function TopicPage() {
               </button>
             )}
             {slideError ? <div className="text-red-600 mt-2">{slideError}</div> : null}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="font-semibold mb-2">Previous Year Questions</h3>
+          <div className="text-sm text-slate-700">
+            {pyqData === null && (
+              <button
+                className="bg-slate-700 text-white px-3 py-1 rounded"
+                onClick={fetchPYQs}
+                disabled={loadingPyq}
+              >
+                {loadingPyq ? "Loading PYQs…" : "Show PYQs"}
+              </button>
+            )}
+            {pyqError ? <div className="text-red-600 mt-2">{pyqError}</div> : null}
+            {pyqData !== null ? (
+              <div className="mt-3 rounded border border-slate-200 bg-slate-50 p-3">
+                {renderPyqContent(pyqData)}
+              </div>
+            ) : null}
           </div>
         </div>
 

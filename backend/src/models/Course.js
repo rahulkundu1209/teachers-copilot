@@ -9,6 +9,7 @@ const TopicSchema = new mongoose.Schema({
   title: { type: String, required: true },
   content: {type: String, default: ""},
   pptLink: {type: String, default: ""},
+  pyqData: { type: mongoose.Schema.Types.Mixed, default: [] },
 }, { _id: false });
 
 const CourseSchema = new mongoose.Schema({

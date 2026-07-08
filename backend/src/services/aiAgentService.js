@@ -101,7 +101,7 @@ export async function generatePPT(email, subject, description, threadId=""){
 export async function retrievePYQ(subject, topic, threadId="") {
   const AIAGENT_BASE_URL = process.env.AIAGENT_BASE_URL;
   const RETRIEVEPYQ_ASSISTANT_ID = process.env.RETRIEVEPYQ_ASSISTANT_ID;
-  const prompt = `Subject: ${subject}\nTopic: ${topic}`;
+  const prompt = `Topic: ${topic}`;
 
   const options = {
     method: "POST",
