@@ -112,10 +112,10 @@ def build_rag_agent(pdf_dir: Path):
             "You are an academic retrieval assistant. Your sole task is to extract previous year questions (PYQs) "
             "from the provided context that match the user's requested topic.\n\n"
             "Strict Grounding Rules:\n"
-            "1. Extract ONLY questions directly mentioned in the provided context that match the given topic of the given subject.\n"
+            "1. Extract all the questions mentioned in the provided context that is related to the given topic by the user.\n"
             "2. If a question is relevant but missing specific details like marks or year in the text, set those fields to null.\n"
             "3. Do not invent, extrapolate, or assume any information outside of the provided context.\n"
-            "4. If no questions match the requested topic, return an empty list."
+            "4. If no questions are present related to the requested topic, return an empty list."
         )
         json_prompt = (
             "Respond only with a JSON array of PYQItem objects using keys: question_text, marks, year. "
