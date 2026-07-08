@@ -1,5 +1,5 @@
 import Course from "../models/Course.js";
-import { generatePPT, retrievePYQ } from "../services/aiAgentService.js";
+import { generatePPT, retrievePYQ, generateAssessment } from "../services/aiAgentService.js";
 import * as googleService from "../services/googleSlidesService.js";
 
 // The aiAgentService's generatePPT(subject, description, threadId="") will be used to create PPTs based on the subject and description provided.
@@ -76,6 +76,44 @@ export async function getTopicPYQ(req, res) {
     await course.save();
 
     return res.json({ pyqs: pyqPayload });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+export async function getTopicAssessment(req, res) {
+  const user = req.user;
+  const email = user && user.email;
+
+  if (!email) {
+    return res.status(401).json({ error: "Unauthorized - please log in" });
+  }
+
+  const { subject, topic, description, topicId, courseId } = req.body;
+  if (!subject || !topic || !topicId || !courseId) {
+    return res.status(400).json({ error: "Subject, topic, topicId, and courseId are required" });
+  }
+
+  try {
+    const course = await Course.findOne({ _id: courseId, userId: email });
+    if (!course) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+
+    const topicItem = course.topics.find((t) => t.id === topicId);
+    if (!topicItem) {
+      return res.status(404).json({ error: "Topic not found in the specified course" });
+    }
+
+    if (topicItem.assessments && topicItem.assessments.length) {
+      return res.json({ assessments: topicItem.assessments });
+    }
+
+    const assessmentPayload = await generateAssessment(subject, topic, description || "");
+    topicItem.assessments = assessmentPayload;
+    await course.save();
+
+    return res.json({ assessments: assessmentPayload });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
