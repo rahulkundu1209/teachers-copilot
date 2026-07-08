@@ -1,14 +1,14 @@
 from langchain.chat_models import init_chat_model
 from deepagents import create_deep_agent
 
-assessment_instructions = """Your task is to generate an assessment for the provided subject and topic. Generate exactly 10 questions combining multiple-choice (MCQ) and short-answer (SAQ) types to test student learning of the given topic.
+assessment_instructions = """Your task is to generate an assessment for the provided subject and topic. Generate exactly 10 MCQ questions to test student learning of the given topic.
 
 Output format: return a JSON array of question objects. Each question object must include the following fields:
 - `id`: serial number or short id
-- `type`: either "mcq" or "saq"
+- `type`: either "mcq"
 - `question_text`: the question string
-- `choices`: for mcq only, an array of choice strings (exactly 4). For saq, this field must be omitted or set to null.
-- `answer`: the correct answer (for mcq, the exact choice text; for saq, a short model answer)
+- `choices`: an array of choice strings (exactly 4).
+- `answer`: the correct answer (for mcq, the exact choice text)
 - `marks`: numeric marks for the question
 
 Context will be provided as a JSON string containing `subject`, `topic`, and `description`.
