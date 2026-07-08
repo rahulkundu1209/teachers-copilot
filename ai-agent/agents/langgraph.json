@@ -4,7 +4,8 @@
     "analyzeSyllabus": "./analyzer.py:agent",
     "parseSyllabus": "./syllabusParser.py:agent",
     "generatePPT": "./pptGenerator.py:agent",
-    "retrievePYQ": "./ragAgent.py:agent"
+    "retrievePYQ": "./ragAgent.py:agent",
+    "generateAssessment": "./assessmentGenerator.py:agent"
   },
   "env": "../.env"
 }
