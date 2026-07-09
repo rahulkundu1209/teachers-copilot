@@ -507,13 +507,32 @@ const [checkingAssessmentStatus, setCheckingAssessmentStatus] =
         <div>
           <h3 className="font-semibold mb-2">Slides outline</h3>
           <div className="text-sm text-slate-700">
-            {slideUrl ? (
+            {/* {slideUrl ? (
               <button className="bg-indigo-600 text-white px-3 py-1 rounded" onClick={openSlideHandler}>
                 Open Slides
-              </button>
+              </button> */}
+              {isStudent ? (
+  <button
+    type="button"
+    className="rounded bg-indigo-600 px-3 py-1 text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+    onClick={openSlideHandler}
+    disabled={!slideUrl}
+  >
+    Open Slides
+  </button>
+) : slideUrl ? (
+  <button
+    type="button"
+    className="rounded bg-indigo-600 px-3 py-1 text-white"
+    onClick={openSlideHandler}
+  >
+    Open Slides
+  </button>
             ) : (
               <button
-                className="bg-indigo-600 text-white px-3 py-1 rounded"
+              type="button"
+    className="rounded bg-indigo-600 px-3 py-1 text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+                //className="bg-indigo-600 text-white px-3 py-1 rounded"
                 onClick={createSlides}
                 disabled={loadingSlides}
               >
@@ -527,7 +546,7 @@ const [checkingAssessmentStatus, setCheckingAssessmentStatus] =
         <div>
           <h3 className="font-semibold mb-2">Previous Year Questions</h3>
           <div className="text-sm text-slate-700">
-            {pyqData === null && (
+            {/* {pyqData === null && (
               <button
                 className="bg-slate-700 text-white px-3 py-1 rounded"
                 onClick={fetchPYQs}
@@ -535,7 +554,25 @@ const [checkingAssessmentStatus, setCheckingAssessmentStatus] =
               >
                 {loadingPyq ? "Loading PYQs…" : "Show PYQs"}
               </button>
+            )} */}
+
+            {pyqData === null && (
+              isStudent ? (
+                <div className="text-slate-500">
+                  PYQs have not been generated yet by the teacher.
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="rounded bg-slate-700 px-3 py-1 text-white"
+                  onClick={fetchPYQs}
+                  disabled={loadingPyq}
+                >
+                  {loadingPyq ? "Loading PYQs…" : "Show PYQs"}
+                </button>
+              )
             )}
+            
             {pyqError ? <div className="text-red-600 mt-2">{pyqError}</div> : null}
             {pyqData !== null ? (
               <div className="mt-3 rounded border border-slate-200 bg-slate-50 p-3">
