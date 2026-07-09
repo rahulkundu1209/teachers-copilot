@@ -1,0 +1,326 @@
+[
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "What is a substitution technique in classical encryption?",
+    "marks": 1
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "What is modular arithmetic?",
+    "marks": 1
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Name one asymmetric key exchange protocol.",
+    "marks": 1
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Name one digital signature standard.",
+    "marks": 1
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "What is PGP?",
+    "marks": 1
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "What is the need for security at multiple levels?",
+    "marks": 1
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Differentiate differential and linear cryptanalysis.",
+    "marks": 1
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "What is primality testing?",
+    "marks": 1
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Differentiate authentication function and MAC.",
+    "marks": 1
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Differentiate intruders and malicious software.",
+    "marks": 1
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Differentiate legal, ethical, and professional aspects of security.",
+    "marks": 1
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Explain the strength of DES.",
+    "marks": 1
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Briefly explain primes and primality testing.",
+    "marks": 5
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Briefly explain authentication protocols.",
+    "marks": 5
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Explain intruders and malicious software.",
+    "marks": 5
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Describe the OSI security architecture with one example.",
+    "marks": 5
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Evaluate the effectiveness of firewalls against modern threats.",
+    "marks": 5
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Describe symmetric key ciphers, S-DES, DES principles, and strength of DES.",
+    "marks": 8
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Outline block cipher modes of operation.",
+    "marks": 7
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Describe the principles of the following asymmetric key ciphers: RSA and ElGamal.",
+    "marks": 8
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Outline different key distribution and management techniques.",
+    "marks": 7
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Describe different authentication protocols and digital signature protocols with suitable examples.",
+    "marks": 15
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Discuss how firewalls and antivirus counter malicious software and intruders.",
+    "marks": 15
+  },
+  {
+    "year": "2025-2026",
+    "subject": "Cryptology",
+    "question_title": "Critically compare OSI security architecture with the network security model.",
+    "marks": 15
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "What is message authentication?",
+    "marks": 1
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "What are the services provided by PGP services?",
+    "marks": 1
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Define steganography?",
+    "marks": 1
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Define Product cipher?",
+    "marks": 1
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Which of the following modes of operation in DES is used for operating?",
+    "marks": 1
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "AES uses a ________ bit block size and a key size of ________ bits.",
+    "marks": 1
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "What is known as Message authentication code?",
+    "marks": 1
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "How many rounds does the AES-192 perform?",
+    "marks": 1
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Calculate the GCD of 8376756 and 1921028 using Euclidean algorithm.",
+    "marks": 1
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "For n = 35, e = 5; C = 10, What is the plaintext (using RSA)?",
+    "marks": 1
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "What is the number of round computation steps in the SHA-256 algorithm?",
+    "marks": 1
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Consider the following example: Size of Plaintext - 48 bytes, Size of MAC - 20 bytes, Block Length - 8 bytes. How many bytes of padding need to be added to the system?",
+    "marks": 1
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Explain the differences between MAC and HASH function?",
+    "marks": 5
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "What are the differences between passive attack and active attack?",
+    "marks": 5
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Compare Substitution and Transposition techniques.",
+    "marks": 5
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Explain in detail the key generation in AES algorithm?",
+    "marks": 5
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Explain the design criteria of block cipher?",
+    "marks": 5
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "What is PGP and S/MIME? Explain them briefly.",
+    "marks": 8
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Write a short note on IP Sec.",
+    "marks": 7
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "State any three requirements for authentication. Define the term message digest.",
+    "marks": 5
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Define the classes of message authentication function. List the authentication message requirements.",
+    "marks": 5
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Explain the significance of signature function in Digital Signature Standard (DSS) approach.",
+    "marks": 5
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "What is triple encryption? How many keys are used in triple encryption?",
+    "marks": 5
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Explain the strength of triple DES.",
+    "marks": 5
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Explain S-DES Structure.",
+    "marks": 5
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Find the secret key shared between user A and user B using Diffie-Hellman algorithm for the following q=353; α (primitive root) = 3, XA=45 and XB=50.",
+    "marks": 7
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Explain Chinese Remainder theorem and find X for the given set of congruent equation using CRT: X ≡ 2 (mod 3), X ≡ 3 (mod 5), X ≡ 2 (mod 7).",
+    "marks": 8
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Write the Euclidean Algorithm. Find gcd(1970, 1066) using Euclid's algorithm.",
+    "marks": 5
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "Assume that a = 255 and n = 11. We can find q = 23 and r = 2 using the division algorithm we have learned in arithmetic. Calculate q and r for a = -255 and n = 11.",
+    "marks": 5
+  },
+  {
+    "year": "2024-2025",
+    "subject": "Cryptology",
+    "question_title": "State the five modes of operation of block cipher.",
+    "marks": 5
+  }
+]
