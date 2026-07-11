@@ -101,7 +101,14 @@ export async function generatePPT(email, subject, description, threadId=""){
 export async function retrievePYQ(subject, topic, threadId="") {
   const AIAGENT_BASE_URL = process.env.AIAGENT_BASE_URL;
   const RETRIEVEPYQ_ASSISTANT_ID = process.env.RETRIEVEPYQ_ASSISTANT_ID;
-  const prompt = `Topic: ${topic}`;
+  const payloadObject = {
+    filter_context: {
+      subject_name: subject,
+    },
+    search_context: {
+      topic: topic,
+    },
+  };
 
   const options = {
     method: "POST",
@@ -114,7 +121,7 @@ export async function retrievePYQ(subject, topic, threadId="") {
       params: {
         message: {
           role: "user",
-          parts: [{ kind: "text", text: JSON.stringify(prompt) }],
+          parts: [{ kind: "text", text: JSON.stringify(payloadObject) }],
           messageId: "msg-4",
         },
         thread: { threadId },
