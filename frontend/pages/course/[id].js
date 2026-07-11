@@ -135,7 +135,7 @@ export default function CoursePage() {
           </div>
         ) : null}
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 ml-6">
           <div>
             <h2 className="text-xl font-bold">{course.name}</h2>
             <div className="text-sm text-slate-500">
