@@ -4,18 +4,23 @@ import getpass
 import json
 import os
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage
-from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langgraph.graph import END, START, MessagesState, StateGraph
+from pymongo import MongoClient
+from pymongo.collection import Collection
 from pydantic import BaseModel, Field, ValidationError
 
 load_dotenv()
+
+DEFAULT_MONGODB_DB = "TCOP_AIAgent"
+DEFAULT_MONGODB_COLLECTION = "pyq_chunks"
+DEFAULT_VECTOR_INDEX_NAME = "vector_index"
 
 
 def ensure_api_key() -> None:
@@ -23,33 +28,70 @@ def ensure_api_key() -> None:
         os.environ["GEMINI_API_KEY"] = getpass.getpass("Enter your Google Gemini API key: ")
 
 
-def load_all_json_subjects(dataset_dir: Path) -> list[Document]:
-    """Scans a directory of JSON subject files and loads questions into memory blocks."""
-    if not dataset_dir.exists():
-        print(f"Warning: Dataset directory {dataset_dir} does not exist.")
-        return []
+def get_required_env(name: str) -> str:
+    value = os.environ.get(name, "").strip()
+    if not value:
+        raise ValueError(f"Missing required environment variable: {name}")
+    return value
 
+
+def get_collection() -> Collection[Any]:
+    mongodb_uri = get_required_env("MONGODB_URI")
+    database_name = os.environ.get("MONGODB_DB", DEFAULT_MONGODB_DB)
+    collection_name = os.environ.get("MONGODB_COLLECTION", DEFAULT_MONGODB_COLLECTION)
+
+    client = MongoClient(mongodb_uri)
+    database = client[database_name]
+    return database[collection_name]
+
+
+def atlas_similarity_search(
+    collection: Collection[Any],
+    embeddings: GoogleGenerativeAIEmbeddings,
+    vector_index_name: str,
+    query: str,
+    k: int,
+    subject: str,
+) -> list[Document]:
+    query_embedding = embeddings.embed_query(query if query else "all")
+
+    pipeline: list[dict[str, Any]] = [
+        {
+            "$vectorSearch": {
+                "index": vector_index_name,
+                "path": "embedding",
+                "queryVector": query_embedding,
+                "numCandidates": max(25, k * 5),
+                "limit": k,
+                "filter": {"subject": subject},
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "text": 1,
+                "subject": 1,
+                "year": 1,
+                "marks": 1,
+                "score": {"$meta": "vectorSearchScore"},
+            }
+        },
+    ]
+
+    # print(f"Pipeline for subject '{subject}' and query '{query}': {json.dumps(pipeline, indent=2)}\n")
+    results = list(collection.aggregate(pipeline))
+    print(f"Atlas similarity search results for subject '{subject}' and query '{query}' and query embedding {len(query_embedding)}: {results}\n")
     documents: list[Document] = []
-    
-    # Iterate through every JSON file in the target directory
-    for json_file in dataset_dir.glob("*.json"):
-        with open(json_file, "r", encoding="utf-8") as f:
-            try:
-                data = json.load(f)
-                for item in data:
-                    # Construct a semantic presentation text string for the vector embeddings
-                    content = f"Question: {item.get('question_title')}\nMarks: {item.get('marks')}\nYear: {item.get('year')}"
-                    
-                    # Store only the mandatory filter variables within document metadata
-                    metadata = {
-                        "subject": item.get("subject"),
-                        "year": item.get("year"),
-                        "marks": item.get("marks")
-                    }
-                    documents.append(Document(page_content=content, metadata=metadata))
-            except json.JSONDecodeError:
-                print(f"Error reading file: {json_file.name}. Skipping corrupt file.")
-                
+    for item in results:
+        metadata = {
+            "subject": item.get("subject"),
+            "year": item.get("year"),
+            "marks": item.get("marks"),
+            "score": item.get("score"),
+            "source_id": str(item.get("_id", "")),
+        }
+        documents.append(Document(page_content=str(item.get("text", "")), metadata=metadata))
+
     return documents
 
 
@@ -57,25 +99,19 @@ def build_rag_agent(dataset_dir: Path):
     ensure_api_key()
 
     model = init_chat_model("google_genai:gemini-2.5-flash-lite")
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
-    vector_store = InMemoryVectorStore(embeddings)
-
-    # Ingest the multi-file dataset folder directly
-    documents = load_all_json_subjects(dataset_dir)
-
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001", output_dimensionality=1536)
+    collection = get_collection()
+    vector_index_name = os.environ.get("MONGODB_VECTOR_INDEX", DEFAULT_VECTOR_INDEX_NAME)
     indexed_subjects = {
-        str(doc.metadata.get("subject", "")).strip()
-        for doc in documents
-        if doc.metadata.get("subject")
+        str(subject).strip()
+        for subject in collection.distinct("subject")
+        if str(subject).strip()
     }
-    
-    if documents:
-        vector_store.add_documents(documents)
 
     def answer_query(input_payload: Union[str, dict, list]) -> str:
         """Retrieve target PYQ items filtering strictly by subject context metadata."""
-        if not documents:
-            return "No records indexed. Populate the JSON dataset folder and try again."
+        if not indexed_subjects:
+            return "No records indexed in MongoDB Atlas. Run ingestion and try again."
     
         # 1. Handle case where LangChain sends content as a list of blocks
         if isinstance(input_payload, list):
@@ -105,27 +141,33 @@ def build_rag_agent(dataset_dir: Path):
         # Unpack request properties safely
         filter_ctx = payload.get("filter_context", {}) or {}
         search_ctx = payload.get("search_context", {}) or {}
+        print("Filter context:", filter_ctx)
+        print("Search context:", search_ctx)
         
         target_subject = str(filter_ctx.get("subject_name", "")).strip()
         target_topic = search_ctx.get("topic", "")
 
         if not target_subject:
+            print("No target subject specified.")
             return json.dumps([])
 
         if target_subject not in indexed_subjects:
+            print(f"Subject '{target_subject}' is not indexed.")
             return json.dumps([])
-    
-        # Construct deterministic hard pre-filtering condition
-        search_filter = lambda doc: str(doc.metadata.get("subject", "")).strip() == target_subject
-    
-        # Query vector store index with strict metadata filtering applied
-        retrieved_docs = vector_store.similarity_search(
-            query=target_topic if target_topic else "all", 
-            k=5, 
-            filter=search_filter
+
+        # Query MongoDB Atlas Vector Search with deterministic subject filtering.
+        retrieved_docs = atlas_similarity_search(
+            collection=collection,
+            embeddings=embeddings,
+            vector_index_name=vector_index_name,
+            query=str(target_topic),
+            k=11,
+            subject=target_subject,
         )
+        print("Retrieved documents: ", retrieved_docs, "\n")
 
         if not retrieved_docs:
+            print("No relevant documents found.")
             return json.dumps([])
     
         context = "\n\n".join(
@@ -182,7 +224,7 @@ def build_rag_agent(dataset_dir: Path):
     
         return json.dumps([item.model_dump(mode="json") for item in parsed_items], ensure_ascii=False)
 
-    return answer_query, documents
+    return answer_query
 
 
 class PYQItem(BaseModel):
@@ -196,7 +238,7 @@ class RAGState(MessagesState):
 
 
 def build_graph(dataset_dir: Path):
-    answer_query, _ = build_rag_agent(dataset_dir)
+    answer_query = build_rag_agent(dataset_dir)
 
     def answer_node(state: RAGState):
         last_message = state["messages"][-1].content if state["messages"] else ""

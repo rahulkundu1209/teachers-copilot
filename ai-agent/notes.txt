@@ -11,3 +11,6 @@ Install dependencies:
 Run the agents:
 Inside the agents folder, run -
 > langgraph dev
+
+
+Ingestion script rerun: python ingest_to_atlas.py --drop-existing

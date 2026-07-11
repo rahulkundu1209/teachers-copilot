@@ -10,3 +10,4 @@ numpy==2.5.1
 langchain-google-genai==4.2.7
 langchain-text-splitters==1.1.2
 pypdf
+pymongo[srv]>=4.8.0
