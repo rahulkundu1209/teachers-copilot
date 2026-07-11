@@ -582,10 +582,10 @@ const [checkingAssessmentStatus, setCheckingAssessmentStatus] =
           </div>
         </div>
 
-        <div>
+        {/* <div>
           <h3 className="font-semibold mb-2">Real World Analogy/Industry News</h3>
           <div className="text-sm text-slate-700">{topic.quiz || "Coming Soon..."}</div>
-        </div>
+        </div> */}
 
         <div>
           <h3 className="font-semibold mb-2">Assessments</h3>
